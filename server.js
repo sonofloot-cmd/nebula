@@ -49,7 +49,19 @@ app.get("/api/search", searchLimiter, async (req, res) => {
       throw new Error(`Search provider returned ${response.status}`);
     }
 
-    const data = await response.json();
+    const responseText = await response.text();
+
+console.log("SearXNG status:", response.status);
+console.log("SearXNG content type:", response.headers.get("content-type"));
+console.log("SearXNG response:", responseText.slice(0, 500));
+
+let data;
+
+try {
+  data = JSON.parse(responseText);
+} catch {
+  throw new Error("SearXNG returned HTML or invalid JSON. Check Render logs.");
+}
 
     const results = (data.results || [])
       .slice(0, 10)
