@@ -39,8 +39,9 @@ app.get("/api/search", searchLimiter, async (req, res) => {
 
     const response = await fetch(searchUrl, {
       headers: {
-        "User-Agent": "NebulaSearch/1.0"
-      },
+  "User-Agent": "Mozilla/5.0 (compatible; NebulaSearch/1.0)",
+  "Accept": "application/json"
+}
       signal: AbortSignal.timeout(10000)
     });
 
