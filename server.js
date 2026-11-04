@@ -38,37 +38,42 @@ app.get("/api/search", searchLimiter, async (req, res) => {
     searchUrl.searchParams.set("format", "json");
 
     const response = await fetch(searchUrl, {
-  headers: {
-    "User-Agent": "Mozilla/5.0 (compatible; NebulaSearch/1.0)",
-    "Accept": "application/json"
-  },
-  signal: AbortSignal.timeout(10000)
-});
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; NebulaSearch/1.0)",
+        "Accept": "application/json"
+      },
+      signal: AbortSignal.timeout(15000)
+    });
+
+    const responseText = await response.text();
+
+    console.log("SearXNG status:", response.status);
+    console.log("SearXNG content type:", response.headers.get("content-type"));
+    console.log("SearXNG response:", responseText.slice(0, 500));
 
     if (!response.ok) {
       throw new Error(`Search provider returned ${response.status}`);
     }
 
-    const responseText = await response.text();
+    let data;
 
-console.log("SearXNG status:", response.status);
-console.log("SearXNG content type:", response.headers.get("content-type"));
-console.log("SearXNG response:", responseText.slice(0, 500));
-
-let data;
-
-try {
-  data = JSON.parse(responseText);
-} catch {
-  throw new Error("SearXNG returned HTML or invalid JSON. Check Render logs.");
-}
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error("SearXNG returned HTML or invalid JSON");
+    }
 
     const results = (data.results || [])
       .slice(0, 10)
       .filter(item => {
         try {
           const url = new URL(item.url);
-          return ["http:", "https:"].includes(url.protocol);
+
+          return (
+            ["http:", "https:"].includes(url.protocol) &&
+            !url.username &&
+            !url.password
+          );
         } catch {
           return false;
         }
