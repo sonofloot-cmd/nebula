@@ -7,10 +7,7 @@ const helmet = require("helmet");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(helmet({
-  contentSecurityPolicy: false
-}));
-
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
 const searchLimiter = rateLimit({
@@ -25,70 +22,40 @@ app.get("/api/search", searchLimiter, async (req, res) => {
     const query = String(req.query.q || "").trim();
 
     if (!query || query.length > 200) {
-      return res.status(400).json({
-        error: "Invalid search query"
-      });
+      return res.status(400).json({ error: "Invalid search query" });
     }
 
-    const searchUrl = new URL(
-      "https://searx.oloke.xyz/search"
-    );
-
-    searchUrl.searchParams.set("q", query);
-    searchUrl.searchParams.set("format", "json");
-
-    const response = await fetch(searchUrl, {
+    const response = await fetch("https://api.tavily.com/search", {
+      method: "POST",
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; NebulaSearch/1.0)",
-        "Accept": "application/json"
+        "Content-Type": "application/json",
+        "X-Tavily-Access-Mode": "keyless"
       },
+      body: JSON.stringify({
+        query,
+        topic: "general",
+        search_depth: "basic",
+        max_results: 10
+      }),
       signal: AbortSignal.timeout(15000)
     });
-
-    const responseText = await response.text();
-
-    console.log("SearXNG status:", response.status);
-    console.log("SearXNG content type:", response.headers.get("content-type"));
-    console.log("SearXNG response:", responseText.slice(0, 500));
 
     if (!response.ok) {
       throw new Error(`Search provider returned ${response.status}`);
     }
 
-    let data;
+    const data = await response.json();
 
-    try {
-      data = JSON.parse(responseText);
-    } catch {
-      throw new Error("SearXNG returned HTML or invalid JSON");
-    }
-
-    const results = (data.results || [])
-      .slice(0, 10)
-      .filter(item => {
-        try {
-          const url = new URL(item.url);
-
-          return (
-            ["http:", "https:"].includes(url.protocol) &&
-            !url.username &&
-            !url.password
-          );
-        } catch {
-          return false;
-        }
-      })
-      .map(item => ({
-        title: String(item.title || "Untitled"),
-        url: item.url,
-        description: String(item.content || "")
-      }));
+    const results = (data.results || []).map(item => ({
+      title: String(item.title || "Untitled"),
+      url: item.url,
+      description: String(item.content || "")
+    }));
 
     res.json({ results });
 
   } catch (error) {
     console.error("Search error:", error.message);
-
     res.status(502).json({
       error: "Search is temporarily unavailable."
     });
@@ -96,10 +63,7 @@ app.get("/api/search", searchLimiter, async (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.json({
-    status: "online",
-    name: "Nebula"
-  });
+  res.json({ status: "online", name: "Nebula" });
 });
 
 app.listen(PORT, "0.0.0.0", () => {
