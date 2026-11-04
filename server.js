@@ -76,8 +76,7 @@ const allowedHosts = [
   "khanacademy.org",
   "www.mathsisfun.com",
   "mathsisfun.com",
-  "www.bbc.co.uk",
-  "bbc.co.uk"
+  "www.roblox.com",
 ];
 
 app.get("/proxy", async (req, res) => {
