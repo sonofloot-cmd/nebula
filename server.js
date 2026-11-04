@@ -65,7 +65,44 @@ app.get("/api/search", searchLimiter, async (req, res) => {
 app.get("/health", (req, res) => {
   res.json({ status: "online", name: "Nebula" });
 });
+const allowedHosts = [
+  "www.khanacademy.org",
+  "khanacademy.org",
+  "www.mathsisfun.com",
+  "mathsisfun.com",
+  "www.roblox.com",
+  "bbc.co.uk"
+];
 
+app.get("/proxy", async (req, res) => {
+  try {
+    const target = new URL(req.query.url);
+
+    if (
+      target.protocol !== "https:" ||
+      !allowedHosts.includes(target.hostname)
+    ) {
+      return res.status(403).send("Website not permitted.");
+    }
+
+    const response = await fetch(target, {
+      signal: AbortSignal.timeout(10000)
+    });
+
+    const contentType = response.headers.get("content-type") || "";
+
+    if (!contentType.includes("text/html")) {
+      return res.status(415).send("Only HTML pages are supported.");
+    }
+
+    const html = await response.text();
+
+    res.type("html").send(html);
+
+  } catch (error) {
+    res.status(400).send("Unable to load this webpage.");
+  }
+});
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Nebula running on port ${PORT}`);
 });
