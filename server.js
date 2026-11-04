@@ -1,32 +1,21 @@
 
 const express = require("express");
 const path = require("path");
-const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      frameSrc: ["https:", "http:"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: null
-    }
-  }
+  contentSecurityPolicy: false
 }));
 
-app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 const searchLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 30,
+  limit: 20,
   standardHeaders: "draft-8",
   legacyHeaders: false
 });
@@ -37,29 +26,14 @@ app.get("/api/search", searchLimiter, async (req, res) => {
 
     if (!query || query.length > 200) {
       return res.status(400).json({
-        error: "Please enter a valid search query."
+        error: "Invalid search query"
       });
     }
 
-    const provider = process.env.SEARXNG_URL;
+    const searchUrl = new URL(
+      "https://searx.oloke.xyz/search"
+    );
 
-    if (!provider) {
-      return res.status(503).json({
-        error: "Search provider has not been configured yet."
-      });
-    }
-
-    const baseUrl = new URL(provider);
-
-    if (
-      !["https:", "http:"].includes(baseUrl.protocol) ||
-      baseUrl.username ||
-      baseUrl.password
-    ) {
-      throw new Error("Invalid search provider configuration.");
-    }
-
-    const searchUrl = new URL("/search", baseUrl.origin);
     searchUrl.searchParams.set("q", query);
     searchUrl.searchParams.set("format", "json");
 
@@ -71,12 +45,13 @@ app.get("/api/search", searchLimiter, async (req, res) => {
     });
 
     if (!response.ok) {
-      throw new Error("Search provider unavailable.");
+      throw new Error(`Search provider returned ${response.status}`);
     }
 
     const data = await response.json();
 
     const results = (data.results || [])
+      .slice(0, 10)
       .filter(item => {
         try {
           const url = new URL(item.url);
@@ -85,17 +60,16 @@ app.get("/api/search", searchLimiter, async (req, res) => {
           return false;
         }
       })
-      .slice(0, 10)
       .map(item => ({
-        title: String(item.title || "Untitled").slice(0, 300),
+        title: String(item.title || "Untitled"),
         url: item.url,
-        description: String(item.content || "").slice(0, 1000)
+        description: String(item.content || "")
       }));
 
     res.json({ results });
 
   } catch (error) {
-    console.error(error.message);
+    console.error("Search error:", error.message);
 
     res.status(502).json({
       error: "Search is temporarily unavailable."
