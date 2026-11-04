@@ -115,7 +115,9 @@ app.get("/proxy", async (req, res) => {
     res.status(400).send("Unable to load this webpage.");
   }
 });
-
+app.get("/proxy-test", (req, res) => {
+  res.send("Nebula proxy route is deployed!");
+});
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Nebula running on port ${PORT}`);
 });
