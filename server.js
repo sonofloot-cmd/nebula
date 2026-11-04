@@ -22,7 +22,9 @@ app.get("/api/search", searchLimiter, async (req, res) => {
     const query = String(req.query.q || "").trim();
 
     if (!query || query.length > 200) {
-      return res.status(400).json({ error: "Invalid search query" });
+      return res.status(400).json({
+        error: "Invalid search query"
+      });
     }
 
     const response = await fetch("https://api.tavily.com/search", {
@@ -46,13 +48,13 @@ app.get("/api/search", searchLimiter, async (req, res) => {
 
     const data = await response.json();
 
-    const results = (data.results || []).map(item => ({
-      title: String(item.title || "Untitled"),
-      url: item.url,
-      description: String(item.content || "")
-    }));
-
-    res.json({ results });
+    res.json({
+      results: (data.results || []).map(item => ({
+        title: String(item.title || "Untitled"),
+        url: item.url,
+        description: String(item.content || "")
+      }))
+    });
 
   } catch (error) {
     console.error("Search error:", error.message);
@@ -63,20 +65,30 @@ app.get("/api/search", searchLimiter, async (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.json({ status: "online", name: "Nebula" });
+  res.json({
+    status: "online",
+    name: "Nebula"
+  });
 });
+
 const allowedHosts = [
   "www.khanacademy.org",
   "khanacademy.org",
   "www.mathsisfun.com",
   "mathsisfun.com",
-  "www.roblox.com",
+  "www.bbc.co.uk",
   "bbc.co.uk"
 ];
 
 app.get("/proxy", async (req, res) => {
   try {
-    const target = new URL(req.query.url);
+    const value = req.query.url;
+
+    if (typeof value !== "string") {
+      return res.status(400).send("Please provide a website URL.");
+    }
+
+    const target = new URL(value);
 
     if (
       target.protocol !== "https:" ||
@@ -86,23 +98,24 @@ app.get("/proxy", async (req, res) => {
     }
 
     const response = await fetch(target, {
+      redirect: "error",
       signal: AbortSignal.timeout(10000)
     });
 
     const contentType = response.headers.get("content-type") || "";
 
-    if (!contentType.includes("text/html")) {
-      return res.status(415).send("Only HTML pages are supported.");
+    if (!response.ok || !contentType.includes("text/html")) {
+      return res.status(502).send("This page could not be displayed.");
     }
 
-    const html = await response.text();
-
-    res.type("html").send(html);
+    res.type("html").send(await response.text());
 
   } catch (error) {
+    console.error("Proxy error:", error.message);
     res.status(400).send("Unable to load this webpage.");
   }
 });
-    app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Nebula running on port ${PORT}`);
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Nebula running on port ${PORT}`);
 });
