@@ -1,0 +1,14 @@
+{
+  "name": "nebula",
+  "version": "1.0.0",
+  "description": "Nebula web search",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "express-rate-limit": "^8.1.0"
+  }
+}
