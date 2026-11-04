@@ -38,12 +38,12 @@ app.get("/api/search", searchLimiter, async (req, res) => {
     searchUrl.searchParams.set("format", "json");
 
     const response = await fetch(searchUrl, {
-      headers: {
-  "User-Agent": "Mozilla/5.0 (compatible; NebulaSearch/1.0)",
-  "Accept": "application/json"
-}
-      signal: AbortSignal.timeout(10000)
-    });
+  headers: {
+    "User-Agent": "Mozilla/5.0 (compatible; NebulaSearch/1.0)",
+    "Accept": "application/json"
+  },
+  signal: AbortSignal.timeout(10000)
+});
 
     if (!response.ok) {
       throw new Error(`Search provider returned ${response.status}`);
