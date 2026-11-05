@@ -3,101 +3,87 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0b0b14">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b16">
   <title>Nebula</title>
   <link rel="stylesheet" href="/style.css">
   <script src="/app.js" defer></script>
 </head>
-
 <body>
+  <header class="toolbar">
+    <a class="brand" href="/" aria-label="Nebula home">
+      <span class="logo">✦</span>
+      <span>Nebula</span>
+    </a>
 
-<header class="toolbar">
+    <nav class="browser-controls" aria-label="Browser controls">
+      <button id="back" type="button" title="Back">←</button>
+      <button id="forward" type="button" title="Forward">→</button>
+      <button id="refresh" type="button" title="Refresh">↻</button>
+      <button id="home" type="button" title="Home">⌂</button>
+    </nav>
 
-  <div class="brand">
-    <span class="logo">✦</span>
-    <span>Nebula</span>
-  </div>
-
-  <a href="/directory.html">Explore Hub</a>
-
-  <div class="browser-controls">
-    <button id="back" type="button" title="Back">←</button>
-    <button id="forward" type="button" title="Forward">→</button>
-    <button id="refresh" type="button" title="Refresh">↻</button>
-    <button id="home" type="button" title="Home">⌂</button>
-  </div>
-
-  <form id="address-form">
-    <input
-      id="address"
-      type="text"
-      placeholder="Search or enter a website..."
-      autocomplete="off"
-    >
-    <button type="submit">Go</button>
-  </form>
-
-</header>
-
-<main id="home-screen">
-
-  <div class="hero">
-
-    <div class="hero-logo">✦</div>
-
-    <h1>Nebula</h1>
-
-    <p>Explore beyond the ordinary.</p>
-
-    <form id="search-form" class="search-box">
-      <span>⌕</span>
-      <input
-        id="search"
-        type="text"
-        placeholder="Search the internet..."
-        autocomplete="off"
-      >
-      <button type="submit">Search</button>
+    <form id="address-form" class="address-form">
+      <input id="address" type="text"
+        placeholder="Search or enter a website..."
+        autocomplete="off">
+      <button type="submit">Go</button>
     </form>
 
-  </div>
+    <a class="hub-link" href="/directory.html">Explore Hub</a>
+  </header>
 
-  <section id="results" class="results"></section>
+  <main id="home-screen">
+    <section class="hero">
+      <div class="hero-logo">✦</div>
+      <h1>Nebula</h1>
+      <p>Explore beyond the ordinary.</p>
 
-</main>
+      <form id="search-form" class="search-box">
+        <span>⌕</span>
+        <input id="search" type="search"
+          placeholder="Search the internet..."
+          autocomplete="off">
+        <button type="submit">Search</button>
+      </form>
+    </section>
 
-<section id="browser" hidden>
+    <section class="workspace">
+      <div class="section-heading">
+        <h2>Search results</h2>
+        <span id="result-count">Ready when you are</span>
+      </div>
+      <section id="results" class="results"></section>
+    </section>
+  </main>
 
-  <div class="viewer-toolbar">
-
-    <div class="viewer-indicator">
-      <span class="status-dot"></span>
-      <span id="browser-status">Ready</span>
+  <section id="browser" hidden>
+    <div id="tabs" class="tabs">
+      <button id="new-tab" type="button">＋ New tab</button>
     </div>
 
-    <button id="open-external" type="button">
-      Open in new tab ↗
-    </button>
+    <div class="viewer-toolbar">
+      <span class="status-dot"></span>
+      <span id="browser-status">Ready</span>
+      <span class="toolbar-spacer"></span>
+      <button id="open-external" type="button">
+        Open in new tab ↗
+      </button>
+    </div>
 
-  </div>
+    <div class="viewer-container">
+      <div id="viewer-placeholder" class="viewer-placeholder">
+        <h2>Welcome to Nebula</h2>
+        <p>Enter a website address above to get started.</p>
+      </div>
+      <iframe id="viewer" title="Nebula website viewer"
+        referrerpolicy="strict-origin-when-cross-origin"
+        sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+        hidden>
+      </iframe>
+    </div>
+  </section>
 
-  <div class="viewer-container">
-
-    <iframe
-      id="viewer"
-      title="Nebula website viewer"
-      allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
-      referrerpolicy="strict-origin-when-cross-origin">
-    </iframe>
-
-  </div>
-
-</section>
-
-<footer>
-  Nebula · Explore beyond the ordinary.
-</footer>
-
+  <footer>Nebula · Explore beyond the ordinary.</footer>
 </body>
 </html>
