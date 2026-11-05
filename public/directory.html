@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nebula Hub</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #080b14;
+  color: #eef2ff;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  padding: 28px 7%;
+  border-bottom: 1px solid #20283b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 25px;
+  font-weight: bold;
+  color: #a78bfa;
+}
+
+header a {
+  color: #aab4cc;
+  text-decoration: none;
+}
+
+main {
+  max-width: 1100px;
+  margin: 65px auto;
+  padding: 0 22px;
+}
+
+.hero { text-align: center; }
+
+.hero h1 {
+  font-size: clamp(36px, 6vw, 58px);
+  margin-bottom: 12px;
+}
+
+.hero h1 span { color: #a78bfa; }
+
+.hero p { color: #929db5; }
+
+.search {
+  width: 100%;
+  max-width: 650px;
+  display: block;
+  margin: 32px auto;
+  padding: 17px 20px;
+  border: 1px solid #303a54;
+  border-radius: 12px;
+  background: #111827;
+  color: white;
+  font-size: 16px;
+  outline: none;
+}
+
+.search:focus { border-color: #a78bfa; }
+
+.filters {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 25px 0 35px;
+}
+
+.filters button {
+  background: #151c2c;
+  border: 1px solid #29344d;
+  color: #c4cce0;
+  padding: 10px 17px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.filters button.active {
+  background: #7c3aed;
+  color: white;
+  border-color: #7c3aed;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 17px;
+}
+
+.card {
+  background: #111827;
+  border: 1px solid #222d43;
+  border-radius: 15px;
+  padding: 22px;
+  transition: .2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: #8b5cf6;
+}
+
+.card .emoji { font-size: 28px; }
+
+.card h3 { margin-bottom: 8px; }
+
+.card p {
+  color: #929db5;
+  line-height: 1.5;
+  min-height: 45px;
+}
+
+.card a {
+  display: inline-block;
+  margin-top: 12px;
+  color: #b9a2ff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.card a:hover { text-decoration: underline; }
+
+.tag {
+  color: #929db5;
+  font-size: 12px;
+}
+
+.empty {
+  text-align: center;
+  color: #929db5;
+  display: none;
+  padding: 40px;
+}
+
+footer {
+  text-align: center;
+  color: #65718b;
+  padding: 45px 15px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">✦ NEBULA</div>
+  <a href="/">Back to Search</a>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Explore <span>your universe.</span></h1>
+    <p>A collection of useful websites, tools and learning resources.</p>
+    <input
+      class="search"
+      id="search"
+      placeholder="Search websites and resources..."
+      autocomplete="off"
+    >
+  </section>
+
+  <nav class="filters">
+    <button class="active" data-filter="all">All</button>
+    <button data-filter="education">Education</button>
+    <button data-filter="maths">Maths</button>
+    <button data-filter="coding">Coding</button>
+    <button data-filter="tools">Tools</button>
+  </nav>
+
+  <section class="grid" id="grid">
+
+    <article class="card" data-category="education">
+      <div class="emoji">🎓</div>
+      <span class="tag">EDUCATION</span>
+      <h3>Khan Academy</h3>
+      <p>Free lessons and exercises across a wide range of school subjects.</p>
+      <a href="https://www.khanacademy.org/" target="_blank" rel="noopener">Visit website ↗</a>
+    </article>
+
+    <article class="card" data-category="maths">
+      <div class="emoji">📐</div>
+      <span class="tag">MATHEMATICS</span>
+      <h3>Math Is Fun</h3>
+      <p>Understand maths through simple explanations and examples.</p>
+      <a href="https://www.mathsisfun.com/" target="_blank" rel="noopener">Visit website ↗</a>
+    </article>
+
+    <article class="card" data-category="maths">
+      <div class="emoji">📊</div>
+      <span class="tag">MATHEMATICS</span>
+      <h3>Desmos</h3>
+      <p>Explore graphs, functions and mathematical relationships.</p>
+      <a href="https://www.desmos.com/calculator" target="_blank" rel="noopener">Visit website ↗</a>
+    </article>
+
+    <article class="card" data-category="maths">
+      <div class="emoji">📏</div>
+      <span class="tag">MATHEMATICS</span>
+      <h3>GeoGebra</h3>
+      <p>Interactive geometry, algebra and graphing tools.</p>
+      <a href="https://www.geogebra.org/" target="_blank" rel="noopener">Visit website ↗</a>
+    </article>
+
+    <article class="card" data-category="coding">
+      <div class="emoji">💻</div>
+      <span class="tag">CODING</span>
+      <h3>Code.org</h3>
+      <p>Learn programming through interactive activities and projects.</p>
+      <a href="https://code.org/" target="_blank" rel="noopener">Visit website ↗</a>
+    </article>
+
+    <article class="card" data-category="coding">
+      <div class="emoji">🐱</div>
+      <span class="tag">CODING</span>
+      <h3>Scratch</h3>
+      <p>Create games, animations and interactive stories.</p>
+      <a href="https://scratch.mit.edu/" target="_blank" rel="noopener">Visit website ↗</a>
+    </article>
+
+    <article class="card" data-category="tools">
+      <div class="emoji">📝</div>
+      <span class="tag">TOOLS</span>
+      <h3>Google Docs</h3>
+      <p>Write, edit and collaborate on documents online.</p>
+      <a href="https://docs.google.com/" target="_blank" rel="noopener">Visit website ↗</a>
+    </article>
+
+    <article class="card" data-category="tools">
+      <div class="emoji">🌐</div>
+      <span class="tag">TOOLS</span>
+      <h3>MDN Web Docs</h3>
+      <p>A reference library for learning web development.</p>
+      <a href="https://developer.mozilla.org/" target="_blank" rel="noopener">Visit website ↗</a>
+    </article>
+
+  </section>
+
+  <div class="empty" id="empty">No matching websites found.</div>
+</main>
+
+<footer>NEBULA HUB · Explore something new.</footer>
+
+<script>
+const search = document.getElementById("search");
+const cards = [...document.querySelectorAll(".card")];
+const buttons = [...document.querySelectorAll(".filters button")];
+const empty = document.getElementById("empty");
+
+let activeFilter = "all";
+
+function update() {
+  const term = search.value.toLowerCase();
+  let visible = 0;
+
+  cards.forEach(card => {
+    const matchesText = card.innerText.toLowerCase().includes(term);
+    const matchesCategory =
+      activeFilter === "all" ||
+      card.dataset.category === activeFilter;
+
+    const show = matchesText && matchesCategory;
+    card.style.display = show ? "" : "none";
+    if (show) visible++;
+  });
+
+  empty.style.display = visible ? "none" : "block";
+}
+
+search.addEventListener("input", update);
+
+buttons.forEach(button => {
+  button.addEventListener("click", () => {
+    buttons.forEach(item => item.classList.remove("active"));
+    button.classList.add("active");
+    activeFilter = button.dataset.filter;
+    update();
+  });
+});
+</script>
+
+</body>
+</html>
