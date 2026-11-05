@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,54 +13,91 @@
 <body>
 
 <header class="toolbar">
+
   <div class="brand">
     <span class="logo">✦</span>
     <span>Nebula</span>
   </div>
-<a href="/directory.html">Explore Hub</a>
+
+  <a href="/directory.html">Explore Hub</a>
+
   <div class="browser-controls">
-    <button id="back">←</button>
-    <button id="forward">→</button>
-    <button id="refresh">↻</button>
-    <button id="home">⌂</button>
+    <button id="back" type="button" title="Back">←</button>
+    <button id="forward" type="button" title="Forward">→</button>
+    <button id="refresh" type="button" title="Refresh">↻</button>
+    <button id="home" type="button" title="Home">⌂</button>
   </div>
 
   <form id="address-form">
-    <input id="address" placeholder="Search or enter a website...">
+    <input
+      id="address"
+      type="text"
+      placeholder="Search or enter a website..."
+      autocomplete="off"
+    >
     <button type="submit">Go</button>
   </form>
+
 </header>
 
 <main id="home-screen">
+
   <div class="hero">
+
     <div class="hero-logo">✦</div>
+
     <h1>Nebula</h1>
+
     <p>Explore beyond the ordinary.</p>
 
     <form id="search-form" class="search-box">
       <span>⌕</span>
-      <input id="search" placeholder="Search the internet...">
+      <input
+        id="search"
+        type="text"
+        placeholder="Search the internet..."
+        autocomplete="off"
+      >
       <button type="submit">Search</button>
     </form>
+
   </div>
 
   <section id="results" class="results"></section>
+
 </main>
 
 <section id="browser" hidden>
-  <div id="browser-status" class="browser-status">
-    Loading website...
+
+  <div class="viewer-toolbar">
+
+    <div class="viewer-indicator">
+      <span class="status-dot"></span>
+      <span id="browser-status">Ready</span>
+    </div>
+
+    <button id="open-external" type="button">
+      Open in new tab ↗
+    </button>
+
   </div>
 
- <iframe
-  id="viewer"
-  title="Nebula website viewer"
-  allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
-  referrerpolicy="strict-origin-when-cross-origin">
-</iframe>
+  <div class="viewer-container">
+
+    <iframe
+      id="viewer"
+      title="Nebula website viewer"
+      allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
+      referrerpolicy="strict-origin-when-cross-origin">
+    </iframe>
+
+  </div>
+
 </section>
 
-<footer>Nebula · Explore beyond the ordinary.</footer>
+<footer>
+  Nebula · Explore beyond the ordinary.
+</footer>
 
 </body>
 </html>
