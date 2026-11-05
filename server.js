@@ -7,7 +7,16 @@ const helmet = require("helmet");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "frame-src": ["https:"],
+      "frame-ancestors": ["'self'"]
+    }
+  }
+}));
+
 app.use(express.static(path.join(__dirname, "public")));
 
 const searchLimiter = rateLimit({
@@ -55,9 +64,9 @@ app.get("/api/search", searchLimiter, async (req, res) => {
         description: String(item.content || "")
       }))
     });
-
   } catch (error) {
     console.error("Search error:", error.message);
+
     res.status(502).json({
       error: "Search is temporarily unavailable."
     });
@@ -71,52 +80,6 @@ app.get("/health", (req, res) => {
   });
 });
 
-const allowedHosts = [
-  "www.khanacademy.org",
-  "khanacademy.org",
-  "www.mathsisfun.com",
-  "mathsisfun.com",
-  "www.roblox.com",
-];
-
-app.get("/proxy", async (req, res) => {
-  try {
-    const value = req.query.url;
-
-    if (typeof value !== "string") {
-      return res.status(400).send("Please provide a website URL.");
-    }
-
-    const target = new URL(value);
-
-    if (
-      target.protocol !== "https:" ||
-      !allowedHosts.includes(target.hostname)
-    ) {
-      return res.status(403).send("Website not permitted.");
-    }
-
-    const response = await fetch(target, {
-      redirect: "error",
-      signal: AbortSignal.timeout(10000)
-    });
-
-    const contentType = response.headers.get("content-type") || "";
-
-    if (!response.ok || !contentType.includes("text/html")) {
-      return res.status(502).send("This page could not be displayed.");
-    }
-
-    res.type("html").send(await response.text());
-
-  } catch (error) {
-    console.error("Proxy error:", error.message);
-    res.status(400).send("Unable to load this webpage.");
-  }
-});
-app.get("/proxy-test", (req, res) => {
-  res.send("Nebula proxy route is deployed!");
-});
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Nebula running on port ${PORT}`);
 });
