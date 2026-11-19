@@ -40,17 +40,19 @@ export interface Stat {
   suffix?: string;
   /** Tiny line under the number. */
   sublabel?: string;
-  /** Seconds into the scene (after any hook delay) when counting starts (default 0.2). */
+  /**
+   * Seconds into the scene (after any hook delay) when this stat starts counting.
+   * It keeps counting until the next stage starts or the scene cuts — never frozen.
+   */
   startSeconds?: number;
-  /** Seconds the count animation takes (default ~60% of the scene). */
-  countSeconds?: number;
 }
 
 export interface SceneDef {
   /** Path of the scene component under src/scenes without ".scene.tsx", e.g. "sneeze/SneezeCloseUp". */
   component: string;
   durationInSeconds: number;
-  stat: Stat;
+  /** One stat, or several stages shown on the same shot (e.g. SNEEZES → DROPLETS). */
+  stat: Stat | Stat[];
   /** One short punchy line, max 10 words. */
   caption: string;
   /** Override the scene's default camera move (merged over the default). */
@@ -60,7 +62,15 @@ export interface SceneDef {
   /** Free-form props passed to the scene component. */
   props?: Record<string, unknown>;
   /** Sound effects: a synth recipe (see scripts/audio/sfx.mjs) or an audio file in /assets. */
-  sfx?: Array<{ synth?: string; file?: string; at?: number; volume?: number; params?: Record<string, unknown> }>;
+  sfx?: Array<{
+    synth?: string;
+    file?: string;
+    at?: number;
+    volume?: number;
+    /** "hit" (default): the sound's impact lands on `at`. "start": the file starts at `at`. */
+    align?: "hit" | "start";
+    params?: Record<string, unknown>;
+  }>;
 }
 
 export interface Episode {

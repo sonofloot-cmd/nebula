@@ -60,7 +60,10 @@ export const validateEpisode = (ep, scenesDir) => {
       errors.push(`${n}: no file src/scenes/${s.component}.scene.tsx`);
     req(typeof s.durationInSeconds === "number", `${n}: \`durationInSeconds\` is required`);
     if (s.durationInSeconds < 4 || s.durationInSeconds > 7) warnings.push(`${n}: scenes should be 4–7s (is ${s.durationInSeconds}s)`);
-    req(s.stat?.label && typeof s.stat?.value === "number", `${n}: \`stat.label\` and numeric \`stat.value\` are required`);
+    const stats = Array.isArray(s.stat) ? s.stat : [s.stat];
+    stats.forEach((st, k) =>
+      req(st?.label && typeof st?.value === "number", `${n}: stat ${k + 1} needs \`label\` and a numeric \`value\``),
+    );
     req(typeof s.caption === "string", `${n}: \`caption\` is required`);
     const words = (s.caption ?? "").split(/\s+/).filter(Boolean).length;
     if (words > 10) errors.push(`${n}: caption has ${words} words (max 10): "${s.caption}"`);
@@ -69,6 +72,6 @@ export const validateEpisode = (ep, scenesDir) => {
 
   const total =
     ep.scenes.reduce((a, s) => a + (s.durationInSeconds ?? 0), 0) + (ep.endCard?.durationInSeconds ?? 3);
-  if (total < 45 || total > 60) warnings.push(`Total length ${total}s is outside 45–60s.`);
+  if (total < 35 || total > 60) warnings.push(`Total length ${total}s is outside 35–60s.`);
   return { errors, warnings, total };
 };

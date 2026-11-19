@@ -233,8 +233,8 @@ export const composeScore = (timeline, { key = "A minor", seed = 7 } = {}) => {
   mix(dry, wet, 0, 1.6);
   [0, 1].forEach((c) => {
     filter(dry[c], "highpass", 38, 0.7, 2);
-    // fade the very end
-    shape(dry[c], (t) => Math.min(1, Math.max(0, (total - t) / 0.5)));
+    // fade the very end; dip the first moments so the opening SFX (the sneeze) punches through
+    shape(dry[c], (t) => Math.min(1, Math.max(0, (total - t) / 0.5)) * (t < 0.7 ? 0.2 + 0.8 * (t / 0.7) : 1));
   });
   return master([dry[0].subarray(0, Math.round(total * SR)), dry[1].subarray(0, Math.round(total * SR))], -1, 1.1);
 };

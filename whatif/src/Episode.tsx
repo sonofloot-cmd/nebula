@@ -42,7 +42,7 @@ export const Episode: React.FC<EpisodeProps> = ({ episode, audio }) => {
               )}
             </SceneTransition>
             <Grade />
-            <StatCounter stat={scene.stat} durationInFrames={slot.durationInFrames} delay={overlayDelay} accent={accent} twist={scene.twist} />
+            <StatCounter stats={Array.isArray(scene.stat) ? scene.stat : [scene.stat]} durationInFrames={slot.durationInFrames} delay={overlayDelay} accent={accent} twist={scene.twist} />
             <Caption text={scene.caption} durationInFrames={slot.durationInFrames} delay={overlayDelay + 4} />
           </Sequence>
         );

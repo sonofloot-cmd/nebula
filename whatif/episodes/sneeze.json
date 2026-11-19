@@ -1,7 +1,7 @@
 // Episode 1 — "What if every human on Earth sneezed at the same time?"
 // Format: JSON with comments (// and /* */ are stripped by scripts/episode.mjs).
 // Every number on screen has its source (or "ESTIMATE") in a comment next to it.
-// Fact-checked November 2026.
+// Fact-checked November 2026. Runtime ≈ 40.5 s.
 {
   "id": "sneeze",
   "question": "What if every human on Earth sneezed at the same time?",
@@ -11,74 +11,93 @@
 
   "scenes": [
     {
-      // BODY — one sneeze, close up.
+      // BODY — one sneeze, close up. Spray is bursting out on frame 1.
       "component": "sneeze/SneezeCloseUp",
-      "durationInSeconds": 6,
+      "durationInSeconds": 5,
       // 40,000: "sneezing can produce as many as 40 000 droplets of 0.5–12 µm".
       //   Source: Tang JW, Li Y, Eames I, Chan PKS, Ridgway GL. "Factors involved in the aerosol
       //   transmission of infection and control of ventilation in healthcare premises."
       //   Journal of Hospital Infection 64(2):100–114 (2006). doi:10.1016/j.jhin.2006.05.022
       //   It is an UPPER figure ("as many as"), hence "up to". Counts in other studies vary widely.
-      "stat": { "label": "Droplets", "value": 40000, "sublabel": "from a single sneeze (up to)" },
+      "stat": { "label": "Droplets", "value": 40000, "sublabel": "from one sneeze (up to)" },
       "caption": "One sneeze fires up to 40,000 droplets.",
       "camera": { "type": "pushIn" },
-      // Sound: the "CHOO" lands on frame 0.
-      "sfx": [{ "synth": "sneeze", "at": 0, "volume": 1 }]
+      // A big, loud "CHOO" exactly on frame 1 (the score ducks under it).
+      "sfx": [{ "synth": "sneeze", "at": 0, "volume": 1, "params": { "big": true } }]
     },
     {
       // ROOM — a metro carriage.
       "component": "sneeze/TrainCarriage",
-      "durationInSeconds": 6,
+      "durationInSeconds": 4,
       // 8 m: the turbulent gas cloud from a sneeze, with its droplet payload, "can travel 23 to 27 feet
       //   (7-8 m)". Source: Bourouiba L. "Turbulent Gas Clouds and Respiratory Pathogen Emissions."
       //   JAMA 323(18):1837–1838 (2020). doi:10.1001/jama.2020.4756
       //   Upper end of the range, under some conditions (humidity, temperature, physiology).
       //   It is how far the cloud spreads, not a measured infection distance.
-      "stat": { "label": "Cloud reach", "value": 8, "decimals": 1, "suffix": " m", "sublabel": "one sneeze's gas cloud (MIT study, 2020)" },
+      "stat": { "label": "Cloud reach", "value": 8, "decimals": 1, "suffix": " m", "sublabel": "one sneeze's gas cloud (MIT, 2020)" },
       "caption": "The cloud can drift 8 metres down the carriage.",
       "props": { "reachMetres": 8 },
       "sfx": [
-        { "synth": "train", "at": 0, "volume": 0.45, "params": { "duration": 6 } },
+        { "synth": "train", "at": 0, "volume": 0.45, "params": { "duration": 4 } },
         { "synth": "sneeze", "at": 0.1, "volume": 0.85, "params": { "pitch": 0.85, "roomWet": 0.25 } }
       ]
     },
     {
-      // STREET — a scramble crossing (modelled on Shibuya, Tokyo).
+      // STREET — Shibuya scramble crossing, Tokyo.
       "component": "sneeze/ScrambleCrossing",
-      "durationInSeconds": 6,
+      "durationInSeconds": 4.5,
       // 2,500 people per green light: ESTIMATE. No official count exists. AFP / WorldAtlas give
       //   "about 2,500 at a time"; other guides say 1,000–3,000. We use the mid-high 2,500.
       //   https://www.worldatlas.com/articles/what-is-the-world-s-busiest-pedestrian-crossing.html
       // 100,000,000 = 2,500 × 40,000 (droplets per sneeze, upper figure — see scene 1). Derived.
       "stat": { "label": "Droplets", "value": 100000000, "sublabel": "2,500 people × 40,000 droplets" },
-      "caption": "2,500 people. 100 million droplets. One green light.",
+      "caption": "Shibuya Crossing: 2,500 people. 100 million droplets.",
       "props": { "people": 2500 },
       "sfx": [
-        { "synth": "street", "at": 0, "volume": 0.4, "params": { "duration": 6 } },
+        { "synth": "street", "at": 0, "volume": 0.4, "params": { "duration": 4.5 } },
         { "synth": "crowdSneeze", "at": 1.0, "volume": 0.9, "params": { "count": 70, "spread": 0.2 } }
       ]
     },
     {
       // CITY — the world's biggest city.
       "component": "sneeze/CityHaze",
-      "durationInSeconds": 6,
+      "durationInSeconds": 4,
       // 41,900,000: Greater Jakarta, ~42 million — world's most populous city in the UN
       //   World Urbanization Prospects 2025 (published Nov 2025), ahead of Dhaka (~40M) and Tokyo (~33M).
       //   https://www.un.org/sustainabledevelopment/blog/2025/11/press-release-wup2025/
       //   Note: the 2025 edition uses a new "Degree of Urbanisation" city definition; older
       //   rankings (Tokyo ~37M) used a different method.
-      "stat": { "label": "Sneezes", "value": 41900000, "sublabel": "Greater Jakarta, the world's largest city" },
+      "stat": { "label": "Sneezes", "value": 41900000, "sublabel": "Greater Jakarta, world's largest city" },
       "caption": "Jakarta: 42 million sneezes in the same second.",
       "camera": { "type": "orbit" },
       "sfx": [
         { "synth": "crowdSneeze", "at": 0.6, "volume": 0.8, "params": { "count": 140, "spread": 0.4, "distance": 0.6, "murmur": false } },
-        { "synth": "wind", "at": 1.0, "volume": 0.4, "params": { "duration": 5 } }
+        { "synth": "wind", "at": 1.0, "volume": 0.4, "params": { "duration": 3 } }
+      ]
+    },
+    {
+      // CONSEQUENCE — the metro region: how many of those sneezes are contagious?
+      "component": "sneeze/CityContagion",
+      "durationInSeconds": 4.5,
+      // 2,400,000: ESTIMATE, derived from CDC figures:
+      //   - adults average 2–3 colds per year (CDC, "Common Colds: Protect Yourself and Others")
+      //   - most people recover in 7–10 days (same CDC page)
+      //   https://webarchive.library.unt.edu/web/20201219114614/https://www.cdc.gov/features/rhinoviruses
+      //   Share with a cold at any moment ≈ 2.5 colds × 8.5 days ÷ 365 ≈ 5.8 %.
+      //   41.9 M (scene 4) × 5.8 % ≈ 2.44 M → shown as 2,400,000.
+      //   Conservative: children catch more colds than adults, and it ignores flu/COVID.
+      "stat": { "label": "Contagious sneezes", "value": 2400000, "sublabel": "~6% of people have a cold at any moment (est.)" },
+      "caption": "2.4 million of those sneezes carry a cold virus.",
+      "props": { "infectedShare": 0.06 },
+      "sfx": [
+        { "synth": "boom", "at": 0.2, "volume": 0.35, "params": { "size": 0.7 } },
+        { "synth": "wind", "at": 0.4, "volume": 0.35, "params": { "duration": 4 } }
       ]
     },
     {
       // COUNTRY — sound: India lights up with sound rings.
       "component": "sneeze/CountrySoundwave",
-      "durationInSeconds": 6,
+      "durationInSeconds": 4,
       // 1,476,000,000: India's population in 2026, UN World Population Prospects 2024 projection
       //   (~1,476.6 million). It is a PROJECTION — India's last census was 2011.
       //   https://statisticstimes.com/demographics/country/india-population.php
@@ -94,38 +113,33 @@
       ]
     },
     {
-      // PLANET — everybody.
-      "component": "sneeze/PlanetSneeze",
+      // PLANET — one shot: everybody sneezes, then the droplet shell lifts off.
+      "component": "sneeze/PlanetDroplets",
       "durationInSeconds": 6,
-      // 8,300,000,000: world population mid-2026 ≈ 8.30 billion (8,300,678,395 for 1 July 2026),
-      //   Worldometer, based on UN World Population Prospects 2024. PROJECTION / estimate.
-      //   https://www.worldometers.info/world-population/
-      "stat": { "label": "Sneezes", "value": 8300000000, "sublabel": "every human on Earth" },
-      "caption": "8.3 billion sneezes. Every continent. One single second.",
-      "props": { "faceLon": 45, "faceLat": 20 },
+      "stat": [
+        // 8,300,000,000: world population mid-2026 ≈ 8.30 billion (8,300,678,395 for 1 July 2026),
+        //   Worldometer, based on UN World Population Prospects 2024. PROJECTION / estimate.
+        //   https://www.worldometers.info/world-population/
+        { "label": "Sneezes", "value": 8300000000, "sublabel": "every human on Earth" },
+        // 332,000,000,000,000 = 8.3 billion people × 40,000 droplets (upper figure, scene 1).
+        //   Derived from the two sourced numbers above; an upper-bound ESTIMATE.
+        { "label": "Droplets", "value": 332000000000000, "startSeconds": 2.6, "sublabel": "8.3 billion × 40,000 (upper estimate)" }
+      ],
+      "caption": "8.3 billion sneezes. 332 trillion droplets. One second.",
+      "props": { "faceLon": 60, "faceLat": 18, "sneezeAt": 0.5, "shellAt": 2.6 },
       "sfx": [
-        { "synth": "whoosh", "at": 0.8, "volume": 0.4, "params": { "reverse": true, "duration": 0.7 } },
-        { "synth": "boom", "at": 0.8, "volume": 0.62, "params": { "size": 1.5 } }
+        { "synth": "whoosh", "at": 0.5, "volume": 0.4, "params": { "reverse": true, "duration": 0.7 } },
+        { "synth": "boom", "at": 0.5, "volume": 0.62, "params": { "size": 1.5 } },
+        { "synth": "wind", "at": 2.3, "volume": 0.45, "params": { "duration": 3.7, "airy": true } }
       ]
     },
     {
-      // ATMOSPHERE — the total droplet count.
-      "component": "sneeze/AtmosphereShell",
-      "durationInSeconds": 6,
-      // 332,000,000,000,000 = 8.3 billion people × 40,000 droplets (upper figure, scene 1).
-      //   Derived from the two sourced numbers above; an upper-bound ESTIMATE.
-      "stat": { "label": "Droplets", "value": 332000000000000, "sublabel": "8.3 billion × 40,000 (upper estimate)" },
-      "caption": "332 trillion droplets launched into the air at once.",
-      "props": { "faceLon": 100 },
-      "sfx": [{ "synth": "wind", "at": 0, "volume": 0.55, "params": { "duration": 6, "airy": true } }]
-    },
-    {
-      // TWIST — everyone's eyes shut at the same moment.
-      "component": "sneeze/BlindPlanet",
-      "durationInSeconds": 7,
+      // TWIST — every driver and every pilot has their eyes shut at the same moment.
+      "component": "sneeze/EyesShut",
+      "durationInSeconds": 5.5,
       "twist": true,
       // Eyes closing: an involuntary reflex during sneezing (trigeminal / brainstem). It is
-      //   possible, with effort, to keep them open — hence "almost every eye".
+      //   possible, with effort, to keep them open — so "every" is the dramatic version of "almost every".
       //   https://www.theregister.com/2007/01/13/the_odd_body_sneezing_eyes_open
       // Countdown 1.00 s: ESTIMATE of how long the eyes stay shut. No peer-reviewed figure found;
       //   road-safety sources imply anywhere from ~0.5 s to ~2 s. Shown in slow motion.
@@ -136,15 +150,17 @@
         "label": "Every eye shut",
         "value": 1.0,
         "format": "countdown",
-        "startSeconds": 0.9,
-        "countSeconds": 5.2,
-        "sublabel": "slow motion · up to 20,000 planes still flying"
+        "startSeconds": 0.45,
+        "sublabel": "Slow-mo · up to 20,000 planes in the air"
       },
-      "caption": "Twist: almost every eye on Earth shuts at once.",
-      "props": { "planes": 1500, "closeAt": 0.9, "faceLon": 15 },
+      "caption": "Every driver. Every pilot. Eyes shut.",
+      "props": { "shutAt": 0.45 },
       "sfx": [
-        { "synth": "thump", "at": 1.0, "volume": 0.9 },
-        { "synth": "whoosh", "at": 6.4, "volume": 0.5, "params": { "reverse": true, "duration": 0.9 } }
+        { "synth": "thump", "at": 0.45, "volume": 0.9 },
+        { "synth": "alarm", "at": 1.3, "volume": 0.4, "params": { "repeats": 2 } },
+        { "synth": "horn", "at": 2.5, "volume": 0.5, "params": { "duration": 1.1 } },
+        { "synth": "horn", "at": 3.5, "volume": 0.4, "params": { "duration": 0.7, "pitch": 0.89 } },
+        { "synth": "whoosh", "at": 5.4, "volume": 0.5, "params": { "reverse": true, "duration": 0.8 } }
       ]
     }
   ],

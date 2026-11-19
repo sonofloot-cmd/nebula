@@ -8,7 +8,8 @@
     "render": "node scripts/render.mjs",
     "test-clip": "node scripts/render.mjs --test",
     "typecheck": "tsc --noEmit",
-    "audio": "node scripts/audio.mjs"
+    "audio": "node scripts/audio.mjs",
+    "preview": "node scripts/render.mjs --preview"
   },
   "dependencies": {
     "@react-three/fiber": "8.18.0",

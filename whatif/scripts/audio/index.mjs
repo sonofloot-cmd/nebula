@@ -108,7 +108,7 @@ export const generateAudio = (ep, root, { log = console.log } = {}) => {
         const res = RECIPES[c.synth]({ seed: 1000 * (i + 1) + j, ...(c.params ?? {}) });
         normalize(res.buf, AMBIENT.has(c.synth) ? { peakDb: -3, rmsDb: -20 } : { peakDb: -1 });
         fadeEdges(res.buf, 0.002, 0.05);
-        const place = at - res.hit;
+        const place = c.align === "start" ? at : at - res.hit;
         const from = Math.max(0, Math.floor(place * FPS));
         const lead = place - from / FPS; // >0: pad with silence, <0: trim the head
         const n = res.buf[0].length;

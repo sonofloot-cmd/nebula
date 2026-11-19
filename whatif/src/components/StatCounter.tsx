@@ -16,56 +16,70 @@ export const formatCountdown = (seconds: number) => {
   return `${p(mm)}:${p(ss)}.${p(cc)}`;
 };
 
-export const statText = (stat: Stat, progress: number) => {
+export const statText = (stat: Stat, progress: number, from = 0) => {
   const decimals = stat.decimals ?? 0;
   if (stat.format === "countdown") {
     const v = interpolate(progress, [0, 1], [stat.value, stat.from ?? 0]);
     return `${stat.prefix ?? ""}${formatCountdown(v)}${stat.suffix ?? ""}`;
   }
-  const v = interpolate(progress, [0, 1], [stat.from ?? 0, stat.value]);
+  const v = interpolate(progress, [0, 1], [stat.from ?? from, stat.value]);
   const rounded = decimals === 0 ? Math.round(v) : v;
   return `${stat.prefix ?? ""}${formatNumber(rounded, decimals)}${stat.suffix ?? ""}`;
 };
 
 /**
- * Top-left stat block: small uppercase label, big animated number, tiny sub-label.
+ * Count-up curve: fast at first (the dramatic part) but with a linear component,
+ * so the number is still visibly ticking on the very last frame of the scene.
+ */
+const countCurve = (x: number) => 0.65 * Easing.out(Easing.cubic)(x) + 0.35 * x;
+
+/**
+ * Top-left stat block: small uppercase label, big animated number, sub-label.
+ * `stats` may hold several stages on one shot (e.g. SNEEZES → DROPLETS); each
+ * stage counts until the next one starts, the last one until the scene cuts.
  * `delay` (frames) holds it back, e.g. until the hook title has cleared.
  */
 export const StatCounter: React.FC<{
-  stat: Stat;
+  stats: Stat[];
   durationInFrames: number;
   delay?: number;
   accent: string;
   twist?: boolean;
-}> = ({ stat, durationInFrames, delay = 0, accent, twist }) => {
+}> = ({ stats, durationInFrames, delay = 0, accent, twist }) => {
   const frame = useCurrentFrame() - delay;
   const { fps } = useVideoConfig();
-  if (frame < 0) return null;
-
-  const isCountdown = stat.format === "countdown";
+  if (frame < 0 || stats.length === 0) return null;
   const available = durationInFrames - delay;
-  const start = Math.round((stat.startSeconds ?? 0.2) * fps);
-  const countFrames = stat.countSeconds
-    ? stat.countSeconds * fps
-    : isCountdown
-      ? available - start - 6
-      : Math.min(available * 0.65, 3.2 * fps);
-  const progress = interpolate(frame, [start, start + countFrames], [0, 1], {
+  const last = available - 1;
+
+  // Stage windows [start, end] in frames (relative to `delay`).
+  const starts = stats.map((s, i) => Math.round((s.startSeconds ?? (i === 0 ? 0.15 : 0)) * fps));
+  let idx = 0;
+  starts.forEach((s, i) => {
+    if (frame >= s) idx = i;
+  });
+  const stat = stats[idx];
+  const start = starts[idx];
+  const end = idx + 1 < stats.length ? starts[idx + 1] - 1 : last;
+  const prevValue = idx > 0 ? stats[idx - 1].value : 0;
+  const isCountdown = stat.format === "countdown";
+
+  const x = interpolate(frame, [start, Math.max(start + 1, end)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
-    easing: isCountdown ? (t) => t : Easing.out(Easing.exp),
   });
+  const progress = isCountdown ? x : countCurve(x);
+  const text = statText(stat, progress, prevValue);
+
+  // Size by the stage's FINAL string so the number never changes size while counting.
+  const finalText = statText(stat, 1, prevValue);
+  const fontSize = Math.min(132, Math.floor(1040 / Math.max(4, finalText.length * 0.62)));
 
   const enter = spring({ frame, fps, config: { damping: 18, stiffness: 140 } });
-  const exit = interpolate(frame, [available - 6, available], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const text = statText(stat, progress);
-  // Size by the FINAL string so the number never changes size while counting.
-  const finalText = statText(stat, 1);
-  const fontSize = Math.min(132, Math.floor(1040 / Math.max(4, finalText.length * 0.62)));
-  const landed = progress >= 1 && !isCountdown;
-  const pop = landed ? 1 + 0.06 * Math.exp(-(frame - start - countFrames) / 4) : 1;
+  // Stage change: the label flips in.
+  const flip = idx > 0 ? spring({ frame: frame - start, fps, config: { damping: 14, stiffness: 160 } }) : 1;
   const color = twist ? "#ff4d4d" : accent;
-  const blink = isCountdown && progress > 0 && progress < 1 ? 0.75 + 0.25 * Math.round((Math.sin(frame * 0.5) + 1) / 2) : 1;
+  const blink = isCountdown && x > 0 && x < 1 ? 0.78 + 0.22 * Math.round((Math.sin(frame * 0.5) + 1) / 2) : 1;
 
   return (
     <div
@@ -76,12 +90,20 @@ export const StatCounter: React.FC<{
         right: 60,
         fontFamily: SANS,
         color: "white",
-        opacity: enter * exit,
+        opacity: enter,
         transform: `translateY(${(1 - enter) * -30}px)`,
-        textShadow: "0 4px 24px rgba(0,0,0,0.45)",
+        textShadow: "0 4px 24px rgba(0,0,0,0.5)",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+          opacity: flip,
+          transform: `translateY(${(1 - flip) * 16}px)`,
+        }}
+      >
         {twist ? (
           <span
             style={{
@@ -111,8 +133,6 @@ export const StatCounter: React.FC<{
           fontVariantNumeric: "tabular-nums",
           letterSpacing: "-0.02em",
           whiteSpace: "nowrap",
-          transformOrigin: "left center",
-          transform: `scale(${pop})`,
           opacity: blink,
           color: twist ? "#fff2f2" : "white",
         }}
@@ -120,7 +140,19 @@ export const StatCounter: React.FC<{
         {text}
       </div>
       {stat.sublabel ? (
-        <div style={{ fontSize: 26, fontWeight: 500, marginTop: 10, opacity: 0.78, letterSpacing: "0.02em" }}>{stat.sublabel}</div>
+        <div
+          style={{
+            fontSize: 52,
+            fontWeight: 600,
+            lineHeight: 1.12,
+            marginTop: 14,
+            maxWidth: 960,
+            opacity: 0.88 * flip,
+            letterSpacing: "-0.005em",
+          }}
+        >
+          {stat.sublabel}
+        </div>
       ) : null}
     </div>
   );

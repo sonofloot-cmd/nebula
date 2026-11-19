@@ -25,8 +25,9 @@ const vowel = (sec, f0, formants, breath = 0.15, seed = 1) => {
   return out;
 };
 
-/** One human sneeze: "ah… CHOO" + spray. */
-export const sneeze = ({ pitch = 1, seed = 1, roomWet = 0.12 } = {}) => {
+/** One human sneeze: "ah… CHOO" + spray. big = longer, chestier, louder CHOO (for the opening frame). */
+export const sneeze = ({ pitch = 1, seed = 1, roomWet = 0.12, big = false } = {}) => {
+  const B = big ? 1 : 0;
   const r = mulberry32(seed);
   const hit = 0.55;
   const out = mono(1.7);
@@ -38,23 +39,23 @@ export const sneeze = ({ pitch = 1, seed = 1, roomWet = 0.12 } = {}) => {
   const ch = noise(0.25, seed + 1);
   filter(ch, "highpass", 1700, 0.7, 2);
   filter(ch, "peak", 3200 * (0.9 + r() * 0.2), 1.6, 1, 9);
-  shape(ch, adEnv(0.003, 0.06));
-  mix(out, ch, hit, 1.1);
+  shape(ch, adEnv(0.003, 0.06 + 0.08 * B));
+  mix(out, ch, hit, 1.1 + 0.3 * B);
   // "OO" voiced tail
   const oo = vowel(0.4, (t) => (330 - 140 * Math.min(1, t / 0.3)) * pitch, [[360, 5, 1], [880, 6, 0.5], [2400, 8, 0.15]], 0.3, seed + 2);
-  shape(oo, adEnv(0.012, 0.13));
-  mix(out, oo, hit + 0.025, 0.75);
+  shape(oo, adEnv(0.012, 0.13 + 0.15 * B));
+  mix(out, oo, hit + 0.025, 0.75 + 0.35 * B);
   // spray of air
   const spray = noise(0.8, seed + 3);
   filter(spray, "lowpass", 5000, 0.7);
   filter(spray, "highpass", 350, 0.7);
-  shape(spray, adEnv(0.002, 0.22));
+  shape(spray, adEnv(0.002, 0.22 + 0.25 * B));
   mix(out, spray, hit, 0.55);
   // chest punch
   const punch = osc(0.15, (t) => 95 - 300 * t, "sine");
-  shape(punch, adEnv(0.002, 0.05));
-  mix(out, punch, hit, 0.45);
-  return { buf: addReverb(toStereo(out), roomWet, { size: 0.7, damp: 0.5, tail: 0.8 }), hit };
+  shape(punch, adEnv(0.002, 0.05 + 0.05 * B));
+  mix(out, punch, hit, 0.45 + 0.4 * B);
+  return { buf: addReverb(toStereo(out), roomWet + 0.12 * B, { size: 0.7 + 0.1 * B, damp: 0.5, tail: 0.8 + 0.6 * B }), hit };
 };
 
 /** Crowd babble: many little formant "voices" talking. */
@@ -218,4 +219,35 @@ export const thump = ({ seed = 71 } = {}) => {
   return { buf: addReverb(toStereo(out), 0.2, { size: 0.5, damp: 0.7, tail: 0.6 }), hit: 0 };
 };
 
-export const RECIPES = { sneeze, crowdSneeze, babble, street, train, boom, whoosh, wind, thump };
+/** Car horn (two-tone), optionally fading as if passing. */
+export const horn = ({ duration = 0.9, pitch = 1, seed = 81 } = {}) => {
+  const out = mono(duration + 0.1);
+  [349, 440].forEach((f, k) => {
+    const s = osc(duration, f * pitch * (1 + (k ? 0.003 : -0.002)), "square");
+    filter(s, "lowpass", 2600, 0.8);
+    filter(s, "peak", 900, 1.2, 1, 6);
+    shape(s, (t) => Math.min(1, t / 0.015) * Math.min(1, (duration - t) / 0.06));
+    mix(out, s, 0, 0.5);
+  });
+  void seed;
+  return { buf: addReverb(toStereo(out), 0.35, { size: 0.8, damp: 0.4, tail: 1.2 }), hit: 0 };
+};
+
+/** Cockpit warning: repeated triple beep. */
+export const alarm = ({ repeats = 2, freq = 980, seed = 91 } = {}) => {
+  const per = 0.75;
+  const out = mono(repeats * per + 0.4);
+  for (let r = 0; r < repeats; r++)
+    for (let k = 0; k < 3; k++) {
+      const b = osc(0.12, freq, "square");
+      const s = osc(0.12, freq * 2, "sine");
+      for (let i = 0; i < b.length; i++) b[i] = b[i] * 0.4 + s[i] * 0.3;
+      filter(b, "lowpass", 4000, 0.7);
+      shape(b, (t) => Math.min(1, t / 0.005) * Math.min(1, (0.12 - t) / 0.01));
+      mix(out, b, r * per + k * 0.16, 1);
+    }
+  void seed;
+  return { buf: addReverb(toStereo(out), 0.15, { size: 0.5, damp: 0.6, tail: 0.5 }), hit: 0 };
+};
+
+export const RECIPES = { sneeze, crowdSneeze, babble, street, train, boom, whoosh, wind, thump, horn, alarm };

@@ -9,6 +9,7 @@ cd whatif
 npm install
 npm run render -- episodes/sneeze.json            # → out/sneeze.mp4
 npm run test-clip -- episodes/sneeze.json         # → out/sneeze-test.mp4 (first 5 s)
+npm run preview -- episodes/sneeze.json           # → out/sneeze-preview.mp4 (whole episode, half resolution)
 npm run test-clip -- episodes/sneeze.json --from=30   # 5 s starting at 0:30
 npm run render -- episodes/sneeze.json --still=0,12,40   # JPEG stills, quick look checks
 npm run render -- episodes/sneeze.json --check    # validate the script only
@@ -16,8 +17,8 @@ npm run studio -- episodes/sneeze.json            # live preview in Remotion Stu
 npm run audio -- episodes/sneeze.json             # build just the soundtrack files
 ```
 
-Rendering uses software WebGL (`swangle`), so it works on servers with no GPU. A 52 s episode
-takes about 5 minutes on 4 CPU cores. On first run Remotion downloads a headless Chrome unless
+Rendering uses software WebGL (`swangle`), so it works on servers with no GPU. A 40 s episode
+takes about 6 minutes on 4 CPU cores (`--preview` takes roughly half that). On first run Remotion downloads a headless Chrome unless
 `REMOTION_BROWSER=/path/to/chrome-headless-shell` is set.
 
 ## Every episode looks like this
@@ -25,8 +26,8 @@ takes about 5 minutes on 4 CPU cores. On first run Remotion downloads a headless
 | Part | Time | What's on screen |
 |---|---|---|
 | Hook | 0–3 s | The question in big serif type over scene 1; something is already moving on frame 1 |
-| Scenes | 6–9 × 4–7 s | Top-left stat block (label, count-up number, sub-label), a caption at the bottom (≤ 10 words), a camera that keeps moving, and each scene at a bigger scale than the last |
-| Twist | near the end | `"twist": true`, a red TWIST tag, and a countdown timer in the stat block |
+| Scenes | 6–9 × 4–7 s | Top-left stat block (label, a number that keeps counting until the cut, sub-label), a caption at the bottom (≤ 10 words), a camera that keeps moving, and each scene at a bigger scale than the last |
+| Twist | near the end | `"twist": true`, a red TWIST tag, and a countdown timer in the stat block that runs until the cut |
 | End card | 3 s | The question again, "PART 2: …" and "FOLLOW FOR MORE WHAT IFS" |
 
 Also on every video: a watermark at the bottom right (`"handle"`) and a synthesised soundtrack (score and sound effects; see [Sound](#sound)).
@@ -61,7 +62,7 @@ Also on every video: a watermark at the bottom right (`"handle"`) and a synthesi
         "value": 8300000000,               // counts up from "from" (default 0)
         "sublabel": "per second",
         "decimals": 0, "prefix": "", "suffix": "",
-        "startSeconds": 0.2, "countSeconds": 3   // optional timing
+        "startSeconds": 0.15                // optional: when counting starts (it always runs to the cut)
       },
       "caption": "Max ten words, white, soft shadow.",
       "camera": { "from": [0, 2, 10], "to": [0, 1, 6] },  // optional override of the scene's move
@@ -70,6 +71,9 @@ Also on every video: a watermark at the bottom right (`"handle"`) and a synthesi
     // … the twist scene:
     { "component": "…", "durationInSeconds": 7, "twist": true,
       "stat": { "label": "Time left", "value": 10, "format": "countdown" }, "caption": "…" }
+    // several stats on one shot: pass an array; each stage counts until the next one starts
+    // "stat": [ { "label": "Sneezes", "value": 8300000000 },
+    //           { "label": "Droplets", "value": 332000000000000, "startSeconds": 2.6 } ]
   ],
   "endCard": { "durationInSeconds": 3, "teaser": "What if …?", "cta": "FOLLOW FOR MORE WHAT IFS" },
   "music": { "file": "music.mp3", "volume": 0.12 }
@@ -77,7 +81,7 @@ Also on every video: a watermark at the bottom right (`"handle"`) and a synthesi
 ```
 
 `npm run render` checks the format rules before it renders. A caption over 10 words or a missing
-component stops the render. Scene count, scene length, total length (45–60 s) and a missing twist
+component stops the render. Scene count, scene length, total length (35–60 s) and a missing twist
 produce warnings only.
 
 ### Writing a scene
@@ -121,14 +125,16 @@ export default LavaCloseUp;
 
 | | |
 |---|---|
-| `components/StatCounter` | Stat block: count-up with ease-out, or `countdown` format (`MM:SS.cc`). Font size is set from the final value so the number never changes size while counting. |
+| `components/StatCounter` | Stat block: a count-up that is fast at first but still ticking on the last frame, or `countdown` format (`MM:SS.cc`). Supports several stages on one shot. Font size is set from each stage's final value so the number never changes size while counting. |
 | `components/Caption` | Bottom caption; the words pop in one at a time. |
 | `components/HookTitle` | Serif question, fully readable on frame 0. |
-| `components/EndCard`, `Watermark`, `Grade`, `SceneTransition` | End card, handle, legibility gradients, and the zoom + flash cut between scenes. |
+| `components/EndCard`, `Watermark`, `Grade`, `SceneTransition` | End card, handle, legibility gradients, and the zoom + dark-dip cut between scenes (no white flash, so space stays black). |
 | `three/SceneCanvas` | `ThreeCanvas` with soft hemisphere + key + rim lights, fog, background, and the camera rig. |
 | `three/camera` | `CameraRig` / `mergeCamera` / `evaluateCamera`: `pushIn`, `pullBack`, `dolly`, `crane` (from → to) and `orbit` (`orbitDegrees`), with easing and a subtle handheld drift. |
 | `three/Particles` | GPU point cloud for sprays, clouds, haze and water: per-particle size and alpha, soft edges, fog-aware, additive option. |
 | `three/props` | `Person` (low-poly), `Crowd` (thousands, instanced), `Buildings` + `makeCity` (procedural box city). |
+| `three/vehicles` | `Cockpit` (airliner flight deck), `Pilot`, `Car` (open-glass cabin), `ShutEyeHead`. |
+| `SceneCanvas` `width`/`height`/`top` | Split-screen scenes: two 3D canvases in one shot (see `sneeze/EyesShut`). |
 | `three/Globe`, `three/geo` | Low-poly Earth from Natural Earth data, `Stars`, `sampleLandPoints`, `latLonToVec3`, country masks (`getCountryPolys("356")`). |
 
 Safe areas: the stat block sits 150 px from the top and the caption 430 px from the bottom. That
@@ -159,7 +165,9 @@ Every render builds a soundtrack automatically. All of it is synthesised in code
   ```
 
   Synth recipes: `sneeze`, `crowdSneeze` (count, spread, distance, murmur), `babble`, `street`,
-  `train`, `boom` (size), `whoosh` (duration, reverse), `wind` (duration, airy), `thump`.
+  `train`, `boom` (size), `whoosh` (duration, reverse), `wind` (duration, airy), `thump`,
+  `horn` (duration, pitch), `alarm` (repeats). `sneeze` also takes `big: true` for the opening frame.
+  Add `"align": "start"` to a cue to start the sound at `at` instead of lining up its hit.
   Adding a recipe is one function in `scripts/audio/sfx.mjs`.
 
 Generated audio is cached in `assets/generated/<id>/`, and only changed cues are re-synthesised.
@@ -177,6 +185,7 @@ estimates are marked **ESTIMATE**. In short:
 - Jakarta ~42 M, the world's largest city: UN *World Urbanization Prospects 2025*
 - India ~1.476 B in 2026: UN *WPP 2024* projection
 - ~90 dB loud sneeze: estimate, with no peer-reviewed measurement found
+- 2.4 M contagious sneezes in Jakarta: estimate from CDC figures (2–3 colds a year, 7–10 days each, so about 6% of people have a cold at any moment)
 - 8.3 B world population (mid-2026): Worldometer / UN *WPP 2024* projection
 - 332 trillion droplets: derived, 8.3 B × 40,000 (upper bound)
 - Eyes closing during a sneeze: involuntary reflex. The ~1 s duration is an estimate.

@@ -5,6 +5,7 @@
 //   npm run render -- episodes/sneeze.json --test --from=20   (5 s starting at 0:20)
 //   npm run render -- episodes/sneeze.json --still=12.5       -> out/sneeze-12.5s.jpg  (or --still=2,12.5,40)
 // Options: --out=path  --concurrency=N  --check (validate only)  --mute (no audio)
+//          --preview  (whole episode at half resolution → out/<id>-preview.mp4)
 import { bundle } from "@remotion/bundler";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import fs from "node:fs";
@@ -85,7 +86,8 @@ if (test) {
   const start = Math.round(Number(flag("from") ?? 0) * composition.fps);
   frameRange = [start, Math.min(composition.durationInFrames - 1, start + 5 * composition.fps - 1)];
 }
-const output = flag("out") ?? path.join(outDir, `${episode.id}${test ? "-test" : ""}.mp4`);
+const preview = flag("preview");
+const output = flag("out") ?? path.join(outDir, `${episode.id}${test ? "-test" : preview ? "-preview" : ""}.mp4`);
 const concurrency = flag("concurrency") ? Number(flag("concurrency")) : null;
 
 const started = Date.now();
@@ -104,6 +106,7 @@ await renderMedia({
   inputProps,
   frameRange,
   concurrency,
+  scale: preview ? 0.5 : 1, // --preview: half resolution (540x960), ~2x faster
   browserExecutable,
   chromiumOptions,
   timeoutInMilliseconds: 120000,

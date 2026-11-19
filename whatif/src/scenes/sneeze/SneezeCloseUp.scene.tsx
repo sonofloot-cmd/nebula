@@ -8,7 +8,7 @@ import type { SceneComponentProps } from "../../types";
 /** BODY scale: one head, one sneeze spray in close-up. Spray is mid-flight on frame 0. */
 
 const MOUTH: [number, number, number] = [0.92, -0.32, 0];
-const PRE_ROLL = 0.45; // seconds of sneeze that already happened before frame 0
+const PRE_ROLL = 0.15; // seconds of sneeze already happened before frame 0 (the CHOO sound lands on frame 0)
 
 const Head: React.FC<{ t: number }> = ({ t }) => {
   // Recoil: head snapped forward just before frame 0 and eases back.

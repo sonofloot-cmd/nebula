@@ -17,6 +17,10 @@ export interface SceneCanvasProps {
   ground?: string;
   sunIntensity?: number;
   sunPosition?: [number, number, number];
+  /** Canvas size / vertical offset in px — for split-screen scenes. Defaults to full frame. */
+  width?: number;
+  height?: number;
+  top?: number;
   children: React.ReactNode;
 }
 
@@ -31,9 +35,14 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
   ground = "#2a2f45",
   sunIntensity = 1.6,
   sunPosition = [6, 10, 8],
+  width: w,
+  height: h,
+  top = 0,
   children,
 }) => {
-  const { width, height } = useVideoConfig();
+  const video = useVideoConfig();
+  const width = w ?? video.width;
+  const height = h ?? video.height;
   return (
     <ThreeCanvas
       width={width}
@@ -41,7 +50,7 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
       dpr={1}
       gl={{ antialias: true, preserveDrawingBuffer: true }}
       camera={{ fov: camera.fov ?? 45, position: camera.from, near: 0.05, far: 2000 }}
-      style={{ position: "absolute", inset: 0 }}
+      style={{ position: "absolute", left: 0, top, width, height }}
     >
       <color attach="background" args={[background]} />
       {fog ? <fog attach="fog" args={fog} /> : null}
