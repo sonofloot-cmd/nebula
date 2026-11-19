@@ -174,5 +174,5 @@
   // Optional: drop your own track at assets/music.mp3 (or set "file"); it replaces the
   // auto-composed score and is mixed low. Without it, the score below is generated.
   "music": { "file": "music.mp3", "volume": 0.12 },
-  "score": { "key": "A minor", "volume": 0.55 }
+  "score": { "key": "A minor", "volume": 0.5 }
 }
