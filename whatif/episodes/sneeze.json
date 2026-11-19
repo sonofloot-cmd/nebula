@@ -89,8 +89,8 @@
       "caption": "India sneezes: a 90-decibel roar, everywhere at once.",
       "props": { "countryId": "356", "centre": [80, 22], "span": 18 },
       "sfx": [
-        { "synth": "boom", "at": 0.7, "volume": 0.8 },
-        { "synth": "boom", "at": 1.6, "volume": 0.45, "params": { "size": 0.6 } }
+        { "synth": "boom", "at": 0.7, "volume": 0.55 },
+        { "synth": "boom", "at": 1.6, "volume": 0.32, "params": { "size": 0.6 } }
       ]
     },
     {
@@ -104,8 +104,8 @@
       "caption": "8.3 billion sneezes. Every continent. One single second.",
       "props": { "faceLon": 45, "faceLat": 20 },
       "sfx": [
-        { "synth": "whoosh", "at": 0.8, "volume": 0.5, "params": { "reverse": true, "duration": 0.7 } },
-        { "synth": "boom", "at": 0.8, "volume": 0.9, "params": { "size": 1.5 } }
+        { "synth": "whoosh", "at": 0.8, "volume": 0.4, "params": { "reverse": true, "duration": 0.7 } },
+        { "synth": "boom", "at": 0.8, "volume": 0.62, "params": { "size": 1.5 } }
       ]
     },
     {
