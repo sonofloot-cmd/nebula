@@ -1,0 +1,133 @@
+// Episode 1 — "What if every human on Earth sneezed at the same time?"
+// Format: JSON with comments (// and /* */ are stripped by scripts/episode.mjs).
+// Every number on screen has its source (or "ESTIMATE") in a comment next to it.
+// Fact-checked November 2026.
+{
+  "id": "sneeze",
+  "question": "What if every human on Earth sneezed at the same time?",
+  "handle": "@myhandle",
+  "accent": "#7fe3ff",
+  "hook": { "durationInSeconds": 3 },
+
+  "scenes": [
+    {
+      // BODY — one sneeze, close up.
+      "component": "sneeze/SneezeCloseUp",
+      "durationInSeconds": 6,
+      // 40,000: "sneezing can produce as many as 40 000 droplets of 0.5–12 µm".
+      //   Source: Tang JW, Li Y, Eames I, Chan PKS, Ridgway GL. "Factors involved in the aerosol
+      //   transmission of infection and control of ventilation in healthcare premises."
+      //   Journal of Hospital Infection 64(2):100–114 (2006). doi:10.1016/j.jhin.2006.05.022
+      //   It is an UPPER figure ("as many as"), hence "up to". Counts in other studies vary widely.
+      "stat": { "label": "Droplets", "value": 40000, "sublabel": "from a single sneeze (up to)" },
+      "caption": "One sneeze fires up to 40,000 droplets.",
+      "camera": { "type": "pushIn" }
+    },
+    {
+      // ROOM — a metro carriage.
+      "component": "sneeze/TrainCarriage",
+      "durationInSeconds": 6,
+      // 8 m: the turbulent gas cloud from a sneeze, with its droplet payload, "can travel 23 to 27 feet
+      //   (7-8 m)". Source: Bourouiba L. "Turbulent Gas Clouds and Respiratory Pathogen Emissions."
+      //   JAMA 323(18):1837–1838 (2020). doi:10.1001/jama.2020.4756
+      //   Upper end of the range, under some conditions (humidity, temperature, physiology).
+      //   It is how far the cloud spreads, not a measured infection distance.
+      "stat": { "label": "Cloud reach", "value": 8, "decimals": 1, "suffix": " m", "sublabel": "one sneeze's gas cloud (MIT study, 2020)" },
+      "caption": "The cloud can drift 8 metres down the carriage.",
+      "props": { "reachMetres": 8 }
+    },
+    {
+      // STREET — a scramble crossing (modelled on Shibuya, Tokyo).
+      "component": "sneeze/ScrambleCrossing",
+      "durationInSeconds": 6,
+      // 2,500 people per green light: ESTIMATE. No official count exists. AFP / WorldAtlas give
+      //   "about 2,500 at a time"; other guides say 1,000–3,000. We use the mid-high 2,500.
+      //   https://www.worldatlas.com/articles/what-is-the-world-s-busiest-pedestrian-crossing.html
+      // 100,000,000 = 2,500 × 40,000 (droplets per sneeze, upper figure — see scene 1). Derived.
+      "stat": { "label": "Droplets", "value": 100000000, "sublabel": "2,500 people × 40,000 droplets" },
+      "caption": "2,500 people. 100 million droplets. One green light.",
+      "props": { "people": 2500 }
+    },
+    {
+      // CITY — the world's biggest city.
+      "component": "sneeze/CityHaze",
+      "durationInSeconds": 6,
+      // 41,900,000: Greater Jakarta, ~42 million — world's most populous city in the UN
+      //   World Urbanization Prospects 2025 (published Nov 2025), ahead of Dhaka (~40M) and Tokyo (~33M).
+      //   https://www.un.org/sustainabledevelopment/blog/2025/11/press-release-wup2025/
+      //   Note: the 2025 edition uses a new "Degree of Urbanisation" city definition; older
+      //   rankings (Tokyo ~37M) used a different method.
+      "stat": { "label": "Sneezes", "value": 41900000, "sublabel": "Greater Jakarta, the world's largest city" },
+      "caption": "Jakarta: 42 million sneezes in the same second.",
+      "camera": { "type": "orbit" }
+    },
+    {
+      // COUNTRY — sound: India lights up with sound rings.
+      "component": "sneeze/CountrySoundwave",
+      "durationInSeconds": 6,
+      // 1,476,000,000: India's population in 2026, UN World Population Prospects 2024 projection
+      //   (~1,476.6 million). It is a PROJECTION — India's last census was 2011.
+      //   https://statisticstimes.com/demographics/country/india-population.php
+      // ~90 dB per loud sneeze: ESTIMATE. Widely quoted (measured ~60 cm away), but we could not
+      //   find a peer-reviewed measurement. Treat as approximate.
+      //   https://www.bottomlineinc.com/health/how-to-sneeze-quietly
+      "stat": { "label": "Sneezes", "value": 1476000000, "sublabel": "India · a loud sneeze is ~90 dB (approx.)" },
+      "caption": "India sneezes: a 90-decibel roar, everywhere at once.",
+      "props": { "countryId": "356", "centre": [80, 22], "span": 18 }
+    },
+    {
+      // PLANET — everybody.
+      "component": "sneeze/PlanetSneeze",
+      "durationInSeconds": 6,
+      // 8,300,000,000: world population mid-2026 ≈ 8.30 billion (8,300,678,395 for 1 July 2026),
+      //   Worldometer, based on UN World Population Prospects 2024. PROJECTION / estimate.
+      //   https://www.worldometers.info/world-population/
+      "stat": { "label": "Sneezes", "value": 8300000000, "sublabel": "every human on Earth" },
+      "caption": "8.3 billion sneezes. Every continent. One single second.",
+      "props": { "faceLon": 45, "faceLat": 20 }
+    },
+    {
+      // ATMOSPHERE — the total droplet count.
+      "component": "sneeze/AtmosphereShell",
+      "durationInSeconds": 6,
+      // 332,000,000,000,000 = 8.3 billion people × 40,000 droplets (upper figure, scene 1).
+      //   Derived from the two sourced numbers above; an upper-bound ESTIMATE.
+      "stat": { "label": "Droplets", "value": 332000000000000, "sublabel": "8.3 billion × 40,000 (upper estimate)" },
+      "caption": "332 trillion droplets launched into the air at once.",
+      "props": { "faceLon": 100 }
+    },
+    {
+      // TWIST — everyone's eyes shut at the same moment.
+      "component": "sneeze/BlindPlanet",
+      "durationInSeconds": 7,
+      "twist": true,
+      // Eyes closing: an involuntary reflex during sneezing (trigeminal / brainstem). It is
+      //   possible, with effort, to keep them open — hence "almost every eye".
+      //   https://www.theregister.com/2007/01/13/the_odd_body_sneezing_eyes_open
+      // Countdown 1.00 s: ESTIMATE of how long the eyes stay shut. No peer-reviewed figure found;
+      //   road-safety sources imply anywhere from ~0.5 s to ~2 s. Shown in slow motion.
+      // ~20,000 planes: Flightradar24 says 8,000–20,000 aircraft are airborne at any given moment
+      //   (record peaks above 22,000). Upper end of the typical range.
+      //   https://support.fr24.com/support/solutions/articles/3000122617-how-can-i-see-how-many-planes-are-currently-flying-
+      "stat": {
+        "label": "Every eye shut",
+        "value": 1.0,
+        "format": "countdown",
+        "startSeconds": 0.9,
+        "countSeconds": 5.2,
+        "sublabel": "slow motion · up to 20,000 planes still flying"
+      },
+      "caption": "Twist: almost every eye on Earth shuts at once.",
+      "props": { "planes": 1500, "closeAt": 0.9, "faceLon": 15 }
+    }
+  ],
+
+  "endCard": {
+    "durationInSeconds": 3,
+    "teaser": "What if everyone sneezed on a plane?",
+    "cta": "FOLLOW FOR MORE WHAT IFS"
+  },
+
+  // Optional: drop a track at assets/music.mp3 (or set "file"). Volume 0–1, kept low under the visuals.
+  "music": { "file": "music.mp3", "volume": 0.12 }
+}
