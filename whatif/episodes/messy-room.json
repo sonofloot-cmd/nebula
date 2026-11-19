@@ -1,0 +1,217 @@
+// Episode 3 — "What if you never cleaned your room for 100 years?"  (TIME-SKIP format)
+// One fixed camera on one set (scenes/messy/Bedroom). Each scene is a stage: the room morphs from the
+// previous stage's state to this one ("transition": "none" = no cut), the window light flickers through
+// day/night cycles, and the counter fast-forwards ("format": "elapsed": value/from are DAYS).
+// Format: JSON with comments. Every number on screen has its source (or "est.") in a comment.
+// Fact-checked November 2026. Runtime ≈ 52 s.
+{
+  "id": "messy-room",
+  "question": "What if you never cleaned your room for 100 years?",
+  "handle": "@simfinity",
+  "accent": "#ffb347",
+  "hook": { "durationInSeconds": 3, "text": "What if you never cleaned your room again?" },
+
+  "scenes": [
+    {
+      // HOOK — a fairly clean room; someone drops a hoodie on the floor and walks out.
+      "component": "messy/Bedroom",
+      "durationInSeconds": 4.5,
+      "transition": "none",
+      "stat": {
+        "label": "Not cleaned", "format": "elapsed", "from": 1, "value": 1, "jumpSeconds": 0.2,
+        "sublabel": "Hoodies on the floor: {n}", "sublabelValue": 1
+      },
+      "caption": "One hoodie. What could go wrong?",
+      "props": {
+        "walkOut": true, "morph": 0.01, "cycles": 0,
+        "state": { "clutter": 0.04, "power": 1, "sun": 0.85, "hoodie": 1 }
+      },
+      "sfx": [
+        { "synth": "roomTone", "at": 0, "volume": 0.18, "align": "start", "params": { "duration": 4.5, "fan": 1 } },
+        { "synth": "steps", "at": 0.2, "volume": 0.35, "align": "start", "params": { "count": 5, "gap": 0.5 } },
+        { "synth": "thump", "at": 1.25, "volume": 0.25 },
+        { "synth": "creak", "at": 0.6, "volume": 0.25, "align": "start", "params": { "duration": 0.8, "pitch": 1.2 } },
+        { "synth": "thump", "at": 3.35, "volume": 0.45 }
+      ]
+    },
+    {
+      // DAY 3 — a plate and a can on the desk. Night, lamp on.
+      "component": "messy/Bedroom",
+      "durationInSeconds": 5,
+      "transition": "none",
+      // 2 h: USDA FSIS — "Never leave food out of refrigeration over 2 hours" (1 h above 90 °F); bacteria
+      //   "can double in number in as little as 20 minutes" in the 40–140 °F Danger Zone.
+      //   https://www.fsis.usda.gov/news-events/news-press-releases/usda-urges-consumers-keep-clear-danger-zone-summer
+      // 48 h: Day 1 → Day 3 (derived).
+      "stat": {
+        "label": "Not cleaned", "format": "elapsed", "from": 1, "value": 3,
+        "sublabel": "Safe limit: 2 h. Now: {n} h", "sublabelValue": 48
+      },
+      "caption": "It starts with one plate.",
+      "props": { "cycles": 2, "state": { "hoodie": 1, "food": 1, "clutter": 0.18, "power": 1, "sun": 0.12 } },
+      "sfx": [
+        { "synth": "whoosh", "at": 0.7, "volume": 0.15, "params": { "duration": 1.2, "reverse": true } },
+        { "synth": "roomTone", "at": 0, "volume": 0.18, "align": "start", "params": { "duration": 5, "fan": 1 } },
+        { "synth": "fly", "at": 1.6, "volume": 0.2, "align": "start", "params": { "duration": 3.2, "count": 1, "pitch": 0.75 } }
+      ]
+    },
+    {
+      // WEEK 2 — mould on the food, fruit flies hatched.
+      "component": "messy/Bedroom",
+      "durationInSeconds": 6,
+      "transition": "none",
+      // Mould: no number on screen (timing varies a lot with food, humidity). Visible mould on food at room
+      //   temperature typically shows within days to about a week; "for the first 2 to 3 days, most molds look
+      //   white" (FDA consumer guide, archived). https://webarchive.library.unt.edu/eot2008/20090117091009/http:/www.cfsan.fda.gov/~dms/a2z-m.html
+      // ~9 days: Drosophila melanogaster egg → adult takes ~8½ days at 25 °C (≈ 10 days per JoVE; 8–10 days per
+      //   ASU Embryo Project; 19 days at 18 °C). https://en.wikipedia.org/wiki/Drosophila_melanogaster
+      //   https://www.jove.com/v/5093/drosophila-development-and-reproduction  — so flies by week 2 fits.
+      "stat": {
+        "label": "Not cleaned", "format": "elapsed", "from": 3, "value": 14,
+        "sublabel": "Egg to adult fruit fly: ~{n} days", "sublabelValue": 9
+      },
+      "caption": "Mould moves in. The flies RSVP.",
+      "props": { "cycles": 4, "state": { "hoodie": 1, "food": 1, "mould": 0.75, "flies": 1, "clutter": 0.4, "dust": 0.1, "power": 1, "sun": 0.7 } },
+      "sfx": [
+        { "synth": "whoosh", "at": 0.7, "volume": 0.15, "params": { "duration": 1.2, "reverse": true } },
+        { "synth": "roomTone", "at": 0, "volume": 0.16, "align": "start", "params": { "duration": 6, "fan": 1 } },
+        { "synth": "fly", "at": 1.0, "volume": 0.3, "align": "start", "params": { "duration": 5, "count": 3, "pitch": 1.1 } }
+      ]
+    },
+    {
+      // MONTH 6 — clothes mountain collapsed, dust on surfaces, sheets grey. Night, lamp still on.
+      "component": "messy/Bedroom",
+      "durationInSeconds": 6,
+      "transition": "none",
+      // ~500,000 dust mites: est. UCL house-dust-mite model: a 3-year-old single mattress holds ~275 g of shed
+      //   skin (≈ 0.25 g/day) and ~12,000 mites per gram of skin → "roughly 3 million mites". Scaled to 6 months:
+      //   0.25 g × 182 d × 12,000 ≈ 550,000 → shown as ~500,000 (est.). It is a model, not a measured count.
+      //   https://www.ucl.ac.uk/bartlett-housedustmites/Publications/PresentationsWorkshop18July02/TobyWilkinson.pdf
+      //   (The often-quoted "10 million mites in a mattress" has no primary source; not used.)
+      "stat": {
+        "label": "Not cleaned", "format": "elapsed", "from": 14, "value": 182,
+        "sublabel": "Dust mites in bed: ~{n} (est.)", "sublabelValue": 500000
+      },
+      "caption": "The chair gave up. So did the sheets.",
+      "props": { "cycles": 5, "state": { "hoodie": 1, "food": 0.9, "mould": 1, "flies": 0.35, "clutter": 0.75, "collapse": 1, "dust": 0.38, "grime": 0.6, "power": 1, "sun": 0.1 } },
+      "sfx": [
+        { "synth": "whoosh", "at": 0.7, "volume": 0.15, "params": { "duration": 1.2, "reverse": true } },
+        { "synth": "roomTone", "at": 0, "volume": 0.15, "align": "start", "params": { "duration": 6, "fan": 0.7 } },
+        { "synth": "fly", "at": 1.5, "volume": 0.15, "align": "start", "params": { "duration": 3.5, "count": 1 } },
+        { "synth": "thump", "at": 0.9, "volume": 0.3 }
+      ]
+    },
+    {
+      // YEAR 1 — dust layer clearly visible, the windowsill plant has died, power's off. Golden evening.
+      "component": "messy/Bedroom",
+      "durationInSeconds": 6,
+      "transition": "none",
+      // ~3.7 g/m²: est. Settled-dust deposition in homes is ~10 mg/m²/day (Canadian House Dust Study: geometric
+      //   means ~9.6–13.5 mg/m²/day; German homes ~9.5–10.9 mg/m²/day). 10 mg × 365 ≈ 3.7 g per m² per year.
+      //   https://www.sciencedirect.com/science/article/abs/pii/S0048969712014209
+      //   Real depth is only microns a year; the visuals exaggerate it so it reads on a phone.
+      "stat": {
+        "label": "Not cleaned", "format": "elapsed", "from": 182, "value": 365,
+        "sublabel": "Dust settled: ~{n} g per m² (est.)", "sublabelValue": 3.7, "sublabelDecimals": 1
+      },
+      "caption": "The plant tried its best.",
+      "props": { "cycles": 5, "state": { "hoodie": 1, "food": 0.6, "mould": 1, "clutter": 0.85, "collapse": 1, "dust": 0.62, "grime": 0.8, "plantDead": 1, "cobwebs": 0.18, "yellow": 0.2, "power": 0, "sun": 0.9 } },
+      "sfx": [
+        { "synth": "whoosh", "at": 0.7, "volume": 0.15, "params": { "duration": 1.2, "reverse": true } },
+        { "synth": "roomTone", "at": 0, "volume": 0.13, "align": "start", "params": { "duration": 6 } }
+      ]
+    },
+    {
+      // YEAR 10 — cobwebs everywhere, posters peeling, the PC buried, paper yellowed.
+      "component": "messy/Bedroom",
+      "durationInSeconds": 6,
+      "transition": "none",
+      // ~37 g/m²: est. Same ~10 mg/m²/day deposition × 3,650 days (see Year 1).
+      "stat": {
+        "label": "Not cleaned", "format": "elapsed", "from": 365, "value": 3650,
+        "sublabel": "Dust settled: ~{n} g per m² (est.)", "sublabelFrom": 3.7, "sublabelValue": 37
+      },
+      "caption": "The PC hasn't moved in 10 years.",
+      "props": { "cycles": 6, "state": { "hoodie": 1, "food": 0.3, "mould": 0.6, "clutter": 0.92, "collapse": 1, "dust": 0.85, "grime": 1, "plantDead": 1, "cobwebs": 1, "peel": 0.7, "yellow": 0.85, "buried": 1, "power": 0, "sun": 0.8 } },
+      "sfx": [
+        { "synth": "whoosh", "at": 0.7, "volume": 0.15, "params": { "duration": 1.2, "reverse": true } },
+        { "synth": "roomTone", "at": 0, "volume": 0.1, "align": "start", "params": { "duration": 6 } },
+        { "synth": "creak", "at": 2.4, "volume": 0.35, "align": "start", "params": { "duration": 1.4, "pitch": 0.7 } }
+      ]
+    },
+    {
+      // YEAR 50 — food gone, fabric rotted, wallpaper falling, a cracked window lets a vine in.
+      "component": "messy/Bedroom",
+      "durationInSeconds": 6,
+      "transition": "none",
+      // ~6 weeks: in a lab soil-bed test, 100 % greige cotton showed holes after 2 weeks and had disappeared
+      //   after 6 weeks (Beltwide Cotton Conferences 2011); nonwoven cotton had a ~12-day half-life in warm moist
+      //   field soil (Beltwide 2010). Damp is the key: in a dry room cotton lasts far longer, which is why it
+      //   needs the broken window. https://www.cotton.org/beltwide/proceedings/2005-2022/data/conferences/2011/papers/12088.pdf
+      //   https://www.cotton.org/beltwide/proceedings/2005-2022/data/conferences/2010/papers/10384.pdf
+      "stat": {
+        "label": "Not cleaned", "format": "elapsed", "from": 3650, "value": 18250,
+        "sublabel": "Damp cotton can rot in ~{n} weeks", "sublabelValue": 6
+      },
+      "caption": "Cotton and paper rot. The metal just rusts.",
+      "props": { "cycles": 6, "state": { "hoodie": 1, "food": 0.05, "clutter": 0.92, "collapse": 1, "dust": 1, "grime": 1, "plantDead": 1, "cobwebs": 1, "peel": 1, "yellow": 1, "buried": 1, "rot": 1, "wallpaper": 1, "crack": 1, "vine": 0.55, "power": 0, "sun": 0.75 } },
+      "sfx": [
+        { "synth": "whoosh", "at": 0.7, "volume": 0.15, "params": { "duration": 1.2, "reverse": true } },
+        { "synth": "wind", "at": 0, "volume": 0.12, "params": { "duration": 6, "airy": true } },
+        { "synth": "creak", "at": 1.8, "volume": 0.4, "align": "start", "params": { "duration": 1.6, "pitch": 0.6 } },
+        { "synth": "creak", "at": 4.1, "volume": 0.3, "align": "start", "params": { "duration": 1.0, "pitch": 0.75 } }
+      ]
+    },
+    {
+      // YEAR 100 — TWIST: almost everything organic is gone; the plastic bottle looks nearly new.
+      "component": "messy/Bedroom",
+      "durationInSeconds": 7,
+      "transition": "none",
+      "twist": true,
+      // ~450 years: est. The NOAA / Woods Hole Sea Grant "marine debris timeline" lists a plastic beverage
+      //   bottle at 450 years. NOAA has confirmed these figures are outreach estimates, not peer-reviewed
+      //   measurements (Chamas et al. 2020 / PMC review), hence "est." and "~".
+      //   https://www.weforum.org/stories/2018/11/chart-of-the-day-this-is-how-long-everyday-plastic-items-last-in-the-ocean
+      //   https://pmc.ncbi.nlm.nih.gov/articles/PMC7334500
+      "stat": {
+        "label": "Not cleaned", "format": "elapsed", "from": 18250, "value": 36500,
+        "sublabel": "Bottle breakdown: ~{n} years (est.)", "sublabelValue": 450
+      },
+      "caption": [
+        { "text": "Almost everything organic is gone.", "at": 0 },
+        { "text": "The only thing that survived: your plastic bottle.", "at": 2.8 }
+      ],
+      "props": { "cycles": 6, "state": { "food": 0, "clutter": 0.92, "collapse": 1, "dust": 1, "grime": 1, "plantDead": 1, "cobwebs": 0.75, "peel": 1, "yellow": 1, "buried": 1, "rot": 1, "wallpaper": 1, "crack": 1, "vine": 1, "gone": 1, "power": 0, "sun": 0.95, "bottleGlow": 1 } },
+      "sfx": [
+        { "synth": "whoosh", "at": 0.7, "volume": 0.15, "params": { "duration": 1.2, "reverse": true } },
+        { "synth": "wind", "at": 0, "volume": 0.08, "params": { "duration": 7, "airy": true } }
+      ]
+    },
+    {
+      // FINAL GAG — the door creaks open and a hand pushes it. Hold, cut.
+      "component": "messy/Bedroom",
+      "durationInSeconds": 2.5,
+      "transition": "none",
+      "stat": {
+        "label": "Not cleaned", "format": "elapsed", "from": 36500, "value": 36500, "jumpSeconds": 0.2,
+        "sublabel": "Visitors in 100 years: {n}", "sublabelValue": 1
+      },
+      "caption": "Mum finally checks.",
+      "props": { "doorAt": 0.15, "morph": 0.01, "cycles": 0, "state": { "food": 0, "clutter": 0.92, "collapse": 1, "dust": 1, "grime": 1, "plantDead": 1, "cobwebs": 0.75, "peel": 1, "yellow": 1, "buried": 1, "rot": 1, "wallpaper": 1, "crack": 1, "vine": 1, "gone": 1, "power": 0, "sun": 0.95, "bottleGlow": 0.6 } },
+      "sfx": [
+        { "synth": "creak", "at": 0.15, "volume": 0.6, "align": "start", "params": { "duration": 1.5, "pitch": 0.55 } }
+      ]
+    }
+  ],
+
+  "endCard": {
+    "durationInSeconds": 3,
+    "teaser": "What if you never brushed your teeth?",
+    "cta": "FOLLOW FOR MORE WHAT IFS"
+  },
+
+  "music": { "file": "music.mp3", "volume": 0.08 },
+  // Low, calm score: soft pads + sparse plucks, no drums or hits; falls silent before the twist.
+  "score": { "key": "A minor", "volume": 0.3, "calm": true },
+  "loudness": { "lufs": -14, "truePeak": -1 }
+}

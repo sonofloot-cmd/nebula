@@ -34,9 +34,15 @@ export const Episode: React.FC<EpisodeProps> = ({ episode, audio }) => {
         const overlayDelay = Math.max(0, tl.hookFrames - slot.from);
         return (
           <Sequence key={i} from={slot.from} durationInFrames={slot.durationInFrames} name={`${i + 1}. ${scene.component}`}>
-            <SceneTransition enabled={i > 0}>
+            <SceneTransition enabled={i > 0 && scene.transition !== "none"}>
               {Scene ? (
-                <Scene durationInFrames={slot.durationInFrames} camera={scene.camera} props={scene.props ?? {}} accent={accent} />
+                <Scene
+                  durationInFrames={slot.durationInFrames}
+                  camera={scene.camera}
+                  props={scene.props ?? {}}
+                  prevProps={episode.scenes[i - 1]?.props}
+                  accent={accent}
+                />
               ) : (
                 <MissingScene name={scene.component} />
               )}
@@ -49,7 +55,7 @@ export const Episode: React.FC<EpisodeProps> = ({ episode, audio }) => {
       })}
 
       <Sequence from={0} durationInFrames={tl.hookFrames} name="Hook">
-        <HookTitle question={episode.question} durationInFrames={tl.hookFrames} />
+        <HookTitle question={episode.hook?.text ?? episode.question} durationInFrames={tl.hookFrames} />
       </Sequence>
 
       <Sequence from={tl.endFrom} durationInFrames={tl.endFrames} name="End card">

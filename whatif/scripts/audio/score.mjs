@@ -111,7 +111,7 @@ const padChord = (notes, dur, cutoff0, cutoff1, seed) => {
 /**
  * @param timeline { scenes: [{start, dur, twist}], end: {start, dur}, total }
  */
-export const composeScore = (timeline, { key = "A minor", seed = 7 } = {}) => {
+export const composeScore = (timeline, { key = "A minor", seed = 7, calm = false } = {}) => {
   const K = KEYS[key] ?? KEYS["A minor"];
   const total = timeline.total;
   const dry = stereo(total + 0.5);
@@ -130,7 +130,7 @@ export const composeScore = (timeline, { key = "A minor", seed = 7 } = {}) => {
     const end = start + dur;
 
     // ---------- cut: riser into it, impact on it ----------
-    if (si > 0) {
+    if (si > 0 && !calm) {
       // no riser into the twist: the score falls silent before it instead (see "gaps" below)
       if (!sc.twist) both(riser(1.0, seed + si), start - 1.0, 0.16, 0, 0.3);
       both(impact(seed + si * 3, sc.twist ? 1.4 : 0.7 + 0.5 * (step / n)), start, sc.twist ? 0.9 : 0.55, 0, 0.45);
@@ -144,7 +144,7 @@ export const composeScore = (timeline, { key = "A minor", seed = 7 } = {}) => {
       for (let i = 0; i < drone.length; i++) drone[i] = (drone[i] + fifth[i] * 0.5) * (0.8 + 0.2 * Math.sin((i / SR) * 1.3));
       shape(drone, (t) => Math.min(1, t / 0.6) * Math.min(1, (dur + 0.3 - t) / 0.8));
       mix(sect, drone, 0, 0.22);
-      for (let t = 0.35; t < dur - 0.6; t += 1.2) {
+      for (let t = 0.35; !calm && t < dur - 0.6; t += 1.2) {
         mix(sect, tom(70, seed + t * 10), t, 1.1);
         mix(sect, tom(60, seed + t * 11), t + 0.24, 0.75);
       }
@@ -165,6 +165,18 @@ export const composeScore = (timeline, { key = "A minor", seed = 7 } = {}) => {
     const L = step / (n - 1);
     const chord = K.prog[step % K.prog.length];
     step++;
+
+    if (calm) {
+      // CALM (time-skip episodes): one soft, slowly opening pad per stage, crossfaded across cuts,
+      // plus a sparse music-box pluck. No drums, risers or hits.
+      both(padChord(chord, dur + 0.8, 380 + 500 * L, 700 + 900 * L, seed + si), start - 0.4, 1.3, 0, 0.5);
+      for (let t = 0.6, k = 0; t < dur - 0.4; t += 1.0, k++) {
+        if (k % 2 === 1 && L < 0.6) continue;
+        const note = chord[k % chord.length] + 24;
+        both(pluck(midiHz(note), 1.6, 0.4), start + t, 0.05 * (1 - 0.6 * L), k % 2 ? 0.3 : -0.3, 0.8);
+      }
+      return;
+    }
 
     // pad (gets brighter and wider with every scene)
     const notes = L > 0.45 ? [...chord, chord[0] + 12] : chord;
@@ -223,7 +235,7 @@ export const composeScore = (timeline, { key = "A minor", seed = 7 } = {}) => {
 
   // ---------- END CARD: resolve ----------
   const { start: es, dur: ed } = timeline.end;
-  both(impact(seed + 999, 1.2), es, 0.8, 0, 0.5);
+  if (!calm) both(impact(seed + 999, 1.2), es, 0.8, 0, 0.5);
   both(padChord(KEYS[key]?.end ?? K.end, ed + 0.6, 2400, 1200, seed + 77), es, 1.1, 0, 0.6);
   [0, 0.375, 0.75, 1.125].forEach((t, k) => {
     both(pluck(midiHz([81, 88, 83, 84][k] ?? 81), 1.2, 1), es + 0.2 + t, 0.1, k % 2 ? 0.4 : -0.4, 0.8);

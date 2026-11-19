@@ -24,7 +24,7 @@ export interface CameraMove {
   ease?: "inOut" | "out" | "linear";
 }
 
-export type StatFormat = "number" | "countdown";
+export type StatFormat = "number" | "countdown" | "elapsed";
 
 export interface Stat {
   /** Small uppercase label above the number, e.g. "SNEEZES". */
@@ -33,8 +33,18 @@ export interface Stat {
   value: number;
   /** Starting value for count-ups (default 0). For countdowns: the end value (default 0). */
   from?: number;
-  /** "number" counts up; "countdown" counts down and shows MM:SS.cc */
+  /**
+   * "number" counts up; "countdown" counts down and shows MM:SS.cc;
+   * "elapsed": value/from are DAYS, shown as "Day 3" / "Week 2" / "Month 6" / "Year 10"
+   * (fast-forwards to the target over `jumpSeconds`, for time-skip episodes).
+   */
   format?: StatFormat;
+  /** elapsed format: seconds to fast-forward from `from` to `value` (default 1.4). */
+  jumpSeconds?: number;
+  /** A number inside the sub-label: "Dust mites in bed: ~{n} (est.)". Counts up through the whole stage. */
+  sublabelValue?: number;
+  sublabelFrom?: number;
+  sublabelDecimals?: number;
   decimals?: number;
   prefix?: string;
   suffix?: string;
@@ -70,6 +80,8 @@ export interface SceneDef {
   camera?: Partial<CameraMove>;
   /** Marks the twist scene: red accent + countdown styling. */
   twist?: boolean;
+  /** "none": no zoom/dark-dip cut into this scene (continuous time-skip episodes). Default "cut". */
+  transition?: "cut" | "none";
   /** Free-form props passed to the scene component. */
   props?: Record<string, unknown>;
   /** Sound effects: a synth recipe (see scripts/audio/sfx.mjs) or an audio file in /assets. */
@@ -91,7 +103,8 @@ export interface Episode {
   handle?: string;
   /** Accent colour for labels (CSS colour). */
   accent?: string;
-  hook?: { durationInSeconds?: number };
+  /** text: the hook title if it should differ from `question` (the end card always uses `question`). */
+  hook?: { durationInSeconds?: number; text?: string };
   scenes: SceneDef[];
   endCard: {
     durationInSeconds?: number;
@@ -124,5 +137,7 @@ export interface SceneComponentProps {
   durationInFrames: number;
   camera?: Partial<CameraMove>;
   props: Record<string, unknown>;
+  /** The previous scene's props (for scenes that continue a state, e.g. time-skips). */
+  prevProps?: Record<string, unknown>;
   accent: string;
 }

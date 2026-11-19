@@ -362,6 +362,70 @@ export const splash = ({ size = 1, seed = 141 } = {}) => {
   return { buf: addReverb(out, 0.35, { size: 0.9, damp: 0.4, tail: 2 * size }), hit: 0 };
 };
 
+/** Quiet room tone: low electrical hum + soft air; `fan` adds a PC-fan whirr. */
+export const roomTone = ({ duration = 6, fan = 0, seed = 151 } = {}) => {
+  const out = stereo(duration);
+  [0, 1].forEach((ch) => {
+    const air = brown(duration, seed + ch);
+    filter(air, "lowpass", 400, 0.7);
+    mix(out[ch], air, 0, 0.5);
+    const hiss = noise(duration, seed + 5 + ch);
+    filter(hiss, "bandpass", 1800, 0.5);
+    mix(out[ch], hiss, 0, 0.05);
+    if (fan > 0) {
+      const f = noise(duration, seed + 9 + ch);
+      filter(f, "bandpass", (t) => 620 + 6 * Math.sin(t * 2), 4);
+      mix(out[ch], f, 0, 0.25 * fan);
+      const hum = osc(duration, 120, "sine");
+      mix(out[ch], hum, 0, 0.04 * fan);
+    }
+  });
+  const edge = (t) => Math.min(1, t / 0.6) * Math.min(1, (duration - t) / 0.6);
+  shape(out[0], edge);
+  shape(out[1], edge);
+  return { buf: out, hit: 0 };
+};
+
+/** Flies buzzing: wingbeat tone with wobbling pitch, swooping in and out (stereo). */
+export const fly = ({ duration = 5, count = 1, pitch = 1, seed = 161 } = {}) => {
+  const r = mulberry32(seed);
+  const out = stereo(duration);
+  for (let k = 0; k < count; k++) {
+    const f0 = (190 + r() * 70) * pitch;
+    const ph = r() * 10;
+    const sp = 0.6 + r() * 0.9;
+    const buzz = osc(duration, (t) => f0 * (1 + 0.06 * Math.sin(t * 7 * sp + ph) + 0.03 * Math.sin(t * 23 + ph)), "saw");
+    filter(buzz, "bandpass", f0 * 2.2, 1.2);
+    filter(buzz, "lowpass", 3000, 0.7);
+    // swoops: near/far loudness + pan
+    const amp = (t) => (0.25 + 0.75 * Math.pow(0.5 + 0.5 * Math.sin(t * 1.3 * sp + ph), 2)) * Math.min(1, t / 0.3) * Math.min(1, (duration - t) / 0.3);
+    shape(buzz, amp);
+    const pan = (t) => Math.sin(t * 0.9 * sp + ph * 2) * 0.8;
+    for (let i = 0; i < buzz.length; i++) {
+      const p = pan(i / 44100);
+      out[0][i] += buzz[i] * Math.cos(((p + 1) * Math.PI) / 4) * (0.9 / Math.sqrt(count));
+      out[1][i] += buzz[i] * Math.sin(((p + 1) * Math.PI) / 4) * (0.9 / Math.sqrt(count));
+    }
+  }
+  return { buf: addReverb(out, 0.15, { size: 0.5, damp: 0.6, tail: 0.5 }), hit: 0 };
+};
+
+/** Soft footsteps on carpet (count steps, `gap` seconds apart). */
+export const steps = ({ count = 4, gap = 0.5, seed = 171 } = {}) => {
+  const r = mulberry32(seed);
+  const out = mono(count * gap + 0.6);
+  for (let k = 0; k < count; k++) {
+    const s = osc(0.3, (t) => 70 + 50 * Math.exp(-t * 30), "sine");
+    shape(s, adEnv(0.004, 0.05));
+    mix(out, s, k * gap + r() * 0.03, 0.8);
+    const n = noise(0.12, seed + k);
+    filter(n, "lowpass", 900, 0.8);
+    shape(n, adEnv(0.003, 0.03));
+    mix(out, n, k * gap, 0.5);
+  }
+  return { buf: addReverb(toStereo(out), 0.15, { size: 0.5, damp: 0.7, tail: 0.5 }), hit: 0 };
+};
+
 /** Short metallic groan / creak (the station starting to tilt). */
 export const creak = ({ duration = 1.2, pitch = 1, seed = 131 } = {}) => {
   const out = mono(duration + 0.2);
@@ -374,4 +438,4 @@ export const creak = ({ duration = 1.2, pitch = 1, seed = 131 } = {}) => {
   return { buf: addReverb(toStereo(out), 0.5, { size: 0.9, damp: 0.3, tail: 1.8 }), hit: 0 };
 };
 
-export const RECIPES = { sneeze, crowdSneeze, babble, street, train, boom, whoosh, wind, thump, horn, alarm, rumble, sonicBoom, whistle, creak, splash };
+export const RECIPES = { sneeze, crowdSneeze, babble, street, train, boom, whoosh, wind, thump, horn, alarm, rumble, sonicBoom, whistle, creak, splash, roomTone, fly, steps };

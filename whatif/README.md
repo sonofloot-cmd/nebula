@@ -9,6 +9,7 @@ cd whatif
 npm install
 npm run render -- episodes/sneeze.json            # → out/sneeze.mp4
 npm run render -- episodes/iss-nyc.json           # → out/iss-nyc.mp4  (episode 2)
+npm run render -- episodes/messy-room.json        # → out/messy-room.mp4  (episode 3, time-skip format)
 npm run test-clip -- episodes/sneeze.json         # → out/sneeze-test.mp4 (first 5 s)
 npm run preview -- episodes/sneeze.json           # → out/sneeze-preview.mp4 (whole episode, half resolution)
 npm run test-clip -- episodes/sneeze.json --from=30   # 5 s starting at 0:30
@@ -88,6 +89,18 @@ starting with "Twist", or a missing component stops the render. Captions over 8 
 sub-labels over 34 characters produce warnings (sub-labels always stay on one line: the font
 shrinks to fit, down to 36 px). Scene count, scene length, total length (35–60 s) and a missing twist
 produce warnings only.
+
+### Time-skip format (one set, one camera)
+
+`episodes/messy-room.json` shows the second format: every scene is the SAME component
+(`messy/Bedroom`) with a different `props.state`, and `"transition": "none"` so there is no cut.
+Scenes receive the previous scene's props as `prevProps`, so the set morphs from the last state to
+the new one over `props.morph` seconds while the window light flickers through `props.cycles`
+day/night cycles. The stat uses `"format": "elapsed"` (value/from in **days**, shown as
+"Day 3" / "Week 2" / "Month 6" / "Year 10", fast-forwarding over `jumpSeconds`), and a counting
+number inside the sub-label: `"sublabel": "Dust mites in bed: ~{n} (est.)", "sublabelValue": 500000`.
+`"hook": { "text": … }` lets the hook title differ from the end-card question, and
+`"score": { "calm": true }` gives soft pads and plucks with no drums or hits.
 
 ### Writing a scene
 
@@ -180,7 +193,8 @@ Every render builds a soundtrack automatically. All of it is synthesised in code
   `train`, `boom` (size), `whoosh` (duration, reverse), `wind` (duration, airy), `thump`,
   `horn` (duration, pitch), `alarm` (repeats), `rumble` (duration, build: a deep roar that builds),
   `sonicBoom` (size, gap: double crack + rattling tail), `whistle` (duration, pitch, pan, thud:
-  falling debris; the hit is the thud), `creak` (duration, pitch), `splash` (size: big water impact). `sneeze` also takes `big: true` for the opening frame.
+  falling debris; the hit is the thud), `creak` (duration, pitch), `splash` (size: big water impact),
+  `roomTone` (duration, fan), `fly` (duration, count, pitch: buzzing flies), `steps` (count, gap). `sneeze` also takes `big: true` for the opening frame.
   Add `"align": "start"` to a cue to start the sound at `at` instead of lining up its hit.
   Adding a recipe is one function in `scripts/audio/sfx.mjs`.
 
@@ -225,5 +239,16 @@ estimates are marked **est.** In short:
 - Footprint ~2,000 km: NASA's July 2024 deorbit-vehicle briefing (ISS program manager Dana Weigel: a "very, very tight" footprint, ≤ ~2,000 km / 1,250 mi). The older "6,000 km or less" ceiling (OIG 2018, USDV procurement) was superseded. Along the ISS ground track (55° from New York) 2,000 km crosses Nova Scotia and reaches Newfoundland
 - Point Nemo 2,688 km from land: NOAA; ISS ~400 km up (NASA), so the crew are *often* the nearest people
 - Skylab, 1979, Esperance / Balladonia WA; $400 littering fine never paid by NASA, paid in 2009 by US radio host Scott Barley: NASA history office, Shire of Esperance, ABC
+
+## Episode 3 sources
+
+`episodes/messy-room.json` (estimates marked **est.**; where the science is vague, no number is shown):
+
+- 2-hour limit for perishable food, bacteria doubling in as little as 20 min: USDA FSIS
+- Fruit fly egg → adult ~9 days (8½ d at 25 °C): *Drosophila melanogaster* references (JoVE, ASU Embryo Project)
+- ~500,000 dust mites in a 6-month-old bed: **est.**, scaled from the UCL house-dust-mite model (~3 M in a 3-year-old mattress)
+- Dust ~3.7 g/m² per year: **est.**, from ~10 mg/m²/day deposition (Canadian House Dust Study; German homes)
+- Damp cotton rots in ~6 weeks: soil-bed test, Beltwide Cotton Conferences (2011)
+- Plastic bottle ~450 years: **est.**, NOAA / Woods Hole outreach figure, not peer-reviewed (Chamas et al. 2020)
 
 Map data: Natural Earth (public domain) via `world-atlas`. Fonts: Playfair Display and Inter (SIL OFL).

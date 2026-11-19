@@ -19,8 +19,20 @@ export const formatCountdown = (seconds: number) => {
   return `${p(mm)}:${p(ss)}.${p(cc)}`;
 };
 
+/** Days → "Day 3" / "Week 2" / "Month 6" / "Year 10". */
+export const formatElapsed = (days: number) => {
+  if (days < 14) return `Day ${Math.max(1, Math.round(days))}`;
+  if (days < 60) return `Week ${Math.round(days / 7)}`;
+  if (days < 365) return `Month ${Math.round(days / 30.42)}`;
+  return `Year ${Math.round(days / 365)}`;
+};
+
 export const statText = (stat: Stat, progress: number, from = 0) => {
   const decimals = stat.decimals ?? 0;
+  if (stat.format === "elapsed") {
+    const v = interpolate(progress, [0, 1], [stat.from ?? from, stat.value]);
+    return `${stat.prefix ?? ""}${formatElapsed(v)}${stat.suffix ?? ""}`;
+  }
   if (stat.format === "countdown") {
     const v = interpolate(progress, [0, 1], [stat.value, stat.from ?? 0]);
     return `${stat.prefix ?? ""}${formatCountdown(v)}${stat.suffix ?? ""}`;
@@ -71,11 +83,35 @@ export const StatCounter: React.FC<{
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const progress = isCountdown ? x : countCurve(x);
+  const isElapsed = stat.format === "elapsed";
+  // elapsed: fast-forward to the target over jumpSeconds (eased), then hold; the sub-label number keeps counting.
+  const jump = interpolate(frame, [start, start + Math.max(1, Math.round((stat.jumpSeconds ?? 1.4) * fps))], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.inOut(Easing.cubic),
+  });
+  const progress = isCountdown ? x : isElapsed ? jump : countCurve(x);
   const text = statText(stat, progress, prevValue);
+  const sub =
+    stat.sublabel && stat.sublabelValue !== undefined
+      ? stat.sublabel.replace(
+          "{n}",
+          formatNumber(
+            (stat.sublabelDecimals ?? 0) === 0
+              ? Math.round(interpolate(countCurve(x), [0, 1], [stat.sublabelFrom ?? 0, stat.sublabelValue]))
+              : interpolate(countCurve(x), [0, 1], [stat.sublabelFrom ?? 0, stat.sublabelValue]),
+            stat.sublabelDecimals ?? 0,
+          ),
+        )
+      : stat.sublabel;
+  // size the sub-label by its final text so it never jumps while counting
+  const subFinal =
+    stat.sublabel && stat.sublabelValue !== undefined
+      ? stat.sublabel.replace("{n}", formatNumber(stat.sublabelValue, stat.sublabelDecimals ?? 0))
+      : stat.sublabel;
 
   // Size by the stage's FINAL string so the number never changes size while counting.
-  const finalText = statText(stat, 1, prevValue);
+  const finalText = isElapsed ? "Month 12" : statText(stat, 1, prevValue);
   const fontSize = Math.min(132, Math.floor(1040 / Math.max(4, finalText.length * 0.62)));
 
   const enter = spring({ frame, fps, config: { damping: 18, stiffness: 140 } });
@@ -142,10 +178,10 @@ export const StatCounter: React.FC<{
       >
         {text}
       </div>
-      {stat.sublabel ? (
+      {sub ? (
         <div
           style={{
-            fontSize: sublabelFontSize(stat.sublabel),
+            fontSize: sublabelFontSize(subFinal ?? sub),
             fontWeight: 600,
             lineHeight: 1.12,
             marginTop: 14,
@@ -155,7 +191,7 @@ export const StatCounter: React.FC<{
             letterSpacing: "-0.005em",
           }}
         >
-          {stat.sublabel}
+          {sub}
         </div>
       ) : null}
     </div>
