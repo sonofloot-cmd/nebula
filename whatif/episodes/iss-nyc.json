@@ -1,0 +1,210 @@
+// Episode 2 — "What if the International Space Station fell on New York?"
+// Format: JSON with comments (// and /* */ are stripped by scripts/episode.mjs).
+// Every number on screen has its source (or "est.") in a comment next to it.
+// Fact-checked November 2026. Runtime ≈ 42 s.
+//
+// Background: NASA plans a controlled deorbit of the ISS around late 2030, using a SpaceX-built
+// U.S. Deorbit Vehicle, into the remote South Pacific (the area around Point Nemo).
+//   NASA, "International Space Station Deorbit Analysis Summary" (white paper, June 2024)
+//   https://www.nasa.gov/wp-content/uploads/2024/06/iss-deorbit-analysis-summary.pdf
+// This episode imagines it going wrong over New York instead.
+{
+  "id": "iss-nyc",
+  "question": "What if the space station fell on New York?",
+  "handle": "@simfinity",
+  "accent": "#ffb347",
+  "hook": { "durationInSeconds": 3 },
+
+  "scenes": [
+    {
+      // HOOK — the station orbits a dark Earth (moving on frame 1), then tilts and starts to drop.
+      "component": "iss/IssOrbit",
+      "durationInSeconds": 4,
+      // ~400 km: NASA gives the ISS orbit as about 250 miles (≈ 400 km) up.
+      //   https://www.nasa.gov/international-space-station/space-station-facts-and-figures/
+      //   The counter starts at 410 km and keeps falling: that's the "what if", not a real figure.
+      "stat": { "label": "Altitude", "from": 410, "value": 350, "suffix": " km", "sublabel": "Normal orbit: ~400 km (NASA)" },
+      "caption": "Then it starts to fall.",
+      "props": { "tiltAt": 1.7 },
+      "sfx": [
+        { "synth": "wind", "at": 0, "volume": 0.22, "params": { "duration": 4, "airy": true } },
+        { "synth": "creak", "at": 1.7, "volume": 0.7, "align": "start", "params": { "duration": 1.3, "pitch": 0.8 } },
+        { "synth": "rumble", "at": 2.2, "volume": 0.35, "align": "start", "params": { "duration": 1.8, "build": 0.9 } }
+      ]
+    },
+    {
+      // SCALE — the station laid over an American football field.
+      "component": "iss/IssFootball",
+      "durationInSeconds": 4.5,
+      // 420 tonnes: NASA lists the ISS mass as 925,335 lb (419,725 kg).
+      //   https://www.nasa.gov/international-space-station/space-station-facts-and-figures/
+      //   The 2024 deorbit white paper also calls it the "420-ton space station".
+      // 109 m: "356 feet (109 meters) end-to-end, one yard shy of the full length of an American
+      //   football field including the end zones." Same NASA facts page.
+      "stat": { "label": "Mass", "value": 420, "suffix": " tonnes", "sublabel": "109 m end to end (NASA)" },
+      "caption": "It's the size of a football field.",
+      "sfx": [
+        { "synth": "whoosh", "at": 0.6, "volume": 0.35, "params": { "duration": 1.4 } },
+        { "synth": "wind", "at": 0, "volume": 0.2, "params": { "duration": 4.5 } }
+      ]
+    },
+    {
+      // SPEED — streaking across the USA. Eastward (LA → NY), the way the ISS actually orbits.
+      "component": "iss/IssStreak",
+      "durationInSeconds": 4.5,
+      // 28,000 km/h: NASA says the station travels "about five miles per second" (≈ 29,000 km/h) and
+      //   makes 16 orbits a day; the commonly quoted figure is 17,500 mph ≈ 28,000 km/h (rounded down).
+      //   https://www.nasa.gov/international-space-station/space-station-facts-and-figures/
+      // "about 8 minutes": DERIVED. New York (40.71°N 74.01°W) → Los Angeles (34.05°N 118.24°W) is
+      //   3,936 km great-circle (haversine, R = 6,371 km). 3,936 ÷ 28,000 km/h = 8.4 min
+      //   (8.2 min at five miles per second). Shown as "≈ 8 MIN".
+      "stat": { "label": "Speed", "value": 28000, "suffix": " km/h", "sublabel": "17,500 mph · 16 orbits a day" },
+      "caption": "LA to New York in about 8 minutes.",
+      "props": { "from": [34.05, -118.24], "to": [40.71, -74.01], "arriveAt": 3.4 },
+      "sfx": [
+        { "synth": "whoosh", "at": 0.5, "volume": 0.55, "params": { "duration": 1.0 } },
+        { "synth": "whoosh", "at": 3.3, "volume": 0.45, "params": { "duration": 0.6, "reverse": true } }
+      ]
+    },
+    {
+      // REENTRY — glowing orange, wings rip off, then it breaks apart.
+      "component": "iss/Reentry",
+      "durationInSeconds": 5,
+      // 1,650 °C: ESA's Mir re-entry FAQ: friction heating can exceed 1,500 °C.
+      //   https://www.esa.int/About_Us/Corporate_news/Mir_FAQs_-_Safety_issues
+      //   1,650 °C (3,000 °F) is the commonly quoted upper surface figure for large re-entering
+      //   objects (secondary sources, e.g. https://www.keeptrack.space/space-terms/reentry). Range: 1,500–1,650 °C.
+      // Break-up: major break-up typically around 78 km altitude (assumed in NASA's ORSAT model;
+      //   Aerospace Corp., "Analysis of reentered debris…", 4th European Conf. on Space Debris, 2005).
+      // "Dense tanks and frames survive": recovered re-entry debris is dominated by stainless-steel and
+      //   titanium tanks and spheres (same Aerospace Corp. paper); ESA CleanSat lists titanium tanks and
+      //   reaction wheels as the parts most likely to survive. Aluminium (most of the structure) melts.
+      "stat": { "label": "Reentry heat", "value": 1650, "suffix": " °C", "sublabel": "1,500 °C+ at the surface (ESA)" },
+      "caption": "Most burns up. Dense tanks and frames survive.",
+      "props": { "breakAt": 0.9, "heatTime": 2.2 },
+      "sfx": [
+        // the deep rumble builds right through re-entry and into the fireball scene
+        { "synth": "rumble", "at": 0, "volume": 0.95, "align": "start", "params": { "duration": 6.6, "build": 0.75 } },
+        { "synth": "whoosh", "at": 1.0, "volume": 0.35, "params": { "duration": 0.6 } },
+        { "synth": "boom", "at": 2.6, "volume": 0.3, "params": { "size": 0.5 } }
+      ]
+    },
+    {
+      // OVER NEW YORK — the fireball over a generic low-poly Manhattan skyline. Sonic boom + shake.
+      "component": "iss/NycFireball",
+      "durationInSeconds": 5.5,
+      // ~80 tonnes: est. 420 t × ~20 % surviving.
+      //   Precedents: Skylab — "some 500 major debris pieces, with a total weight of about 20,000 kg"
+      //   were found in the Outback, out of a ~77 t station (≈ 26 %).
+      //   https://ntrs.nasa.gov/api/citations/19940020171/downloads/19940020171.pdf
+      //   Mir — 20–25 t of fragments were predicted to survive out of ~130 t (≈ 17 %).
+      //   https://en.wikipedia.org/wiki/Deorbit_of_Mir
+      //   General rule of thumb (secondary): 10–40 % of a large spacecraft's mass reaches the ground.
+      // Sonic boom: dramatised. Large re-entries are heard as booms on the ground (e.g. Columbia, 2003).
+      "stat": { "label": "Debris", "value": 80, "suffix": " tonnes", "sublabel": "est. ~20% survives (like Skylab)" },
+      "caption": "80 tonnes survive. The sonic boom shakes Manhattan.",
+      "props": { "boomAt": 1.5, "splitAt": 0.8 },
+      "sfx": [
+        { "synth": "wind", "at": 0, "volume": 0.25, "params": { "duration": 5.5 } },
+        { "synth": "sonicBoom", "at": 1.5, "volume": 1, "params": { "size": 1.1 } },
+        { "synth": "whistle", "at": 2.9, "volume": 0.5, "params": { "duration": 1.3, "pan": -0.4 } },
+        { "synth": "whistle", "at": 3.7, "volume": 0.45, "params": { "duration": 1.6, "pitch": 0.85, "pan": 0.5 } },
+        { "synth": "whistle", "at": 4.6, "volume": 0.4, "params": { "duration": 1.1, "pitch": 1.15, "pan": 0 } }
+      ]
+    },
+    {
+      // IMPACT ZONE — the debris footprint: a long, narrow strip from Manhattan out over the Atlantic.
+      "component": "iss/DebrisFootprint",
+      "durationInSeconds": 4.5,
+      // 6,000 km: NASA's target for the ISS deorbit is "a 6,000 km or less footprint in an uninhabited
+      //   region of the South Pacific Ocean" (NASA JSC procurement, U.S. Deorbit Vehicle).
+      //   https://www.nasa.gov/wp-content/uploads/2025/06/usdv-vignette-op.pdf
+      //   For comparison: Mir was predicted at ~6,000 km × 200 km and actually spread ~±1,500 km
+      //   along track; Skylab's footprint was ~3,900 km. So: thousands of km, not hundreds.
+      // Direction: the ISS orbit is inclined 51.6°, so over New York (40.7°N) an ascending pass heads
+      //   ~55° east of north: asin(cos 51.6° / cos 40.7°) = 55.0°. 6,000 km along that great circle
+      //   passes south of Ireland and ends in central France (47.3°N 3.8°E) — hence "to France".
+      //   Strip width drawn as 200 km (Mir's predicted width).
+      "stat": { "label": "Debris trail", "value": 6000, "suffix": " km", "sublabel": "NASA's max for the ISS footprint" },
+      "caption": "Debris could rain from Manhattan to France.",
+      "props": {
+        "start": [40.71, -74.01], "bearing": 55, "lengthKm": 6000, "widthKm": 200,
+        "labels": [ { "text": "ATLANTIC", "km": 2600 }, { "text": "FRANCE", "km": 5950 } ]
+      },
+      "sfx": [
+        { "synth": "wind", "at": 0, "volume": 0.3, "params": { "duration": 4.5, "airy": true } },
+        { "synth": "whistle", "at": 1.3, "volume": 0.35, "params": { "duration": 1.0, "pitch": 1.2, "pan": -0.3 } },
+        { "synth": "whistle", "at": 2.2, "volume": 0.3, "params": { "duration": 1.2, "pitch": 0.95, "pan": 0.4 } }
+      ]
+    },
+    {
+      // WHY IT WON'T HAPPEN — the real target: Point Nemo, farthest point from land.
+      "component": "iss/PointNemo",
+      "durationInSeconds": 4.5,
+      // 2,688 km: NOAA — Point Nemo (48°52.6′S 123°23.6′W) is about 2,688 km (1,670 mi) from the
+      //   nearest land: Ducie Island (Pitcairns, north), Motu Nui (Easter Island, NE), Maher Island
+      //   (Antarctica, south). https://oceanservice.noaa.gov/facts/nemo.html
+      // "Often astronauts, 400 km up": the ISS orbits ~400 km up (NASA), far closer than 2,688 km —
+      //   but only while it is passing overhead, hence "often", not "always".
+      //   https://www.skyatnightmagazine.com/earth-from-space/point-nemo
+      // NASA aims for the uninhabited South Pacific area around Point Nemo, not the exact point.
+      "stat": { "label": "Nearest land", "value": 2688, "suffix": " km", "sublabel": "Point Nemo, NASA's real target" },
+      "caption": "Nearest humans? Often astronauts, 400 km up.",
+      "props": {
+        "nemo": [-48.877, -123.393],
+        "neighbours": [
+          { "name": "DUCIE IS.", "lat": -24.68, "lon": -124.79 },
+          { "name": "EASTER IS.", "lat": -27.20, "lon": -109.45 },
+          { "name": "ANTARCTICA", "lat": -72.97, "lon": -126.37 }
+        ]
+      },
+      // Sound stops early: the score falls silent ~0.9 s before the twist (scripts/audio/score.mjs).
+      "sfx": [{ "synth": "wind", "at": 0, "volume": 0.3, "params": { "duration": 3.3, "airy": true } }]
+    },
+    {
+      // TWIST — it has happened before: Skylab, Western Australia, 1979.
+      "component": "iss/OutbackTwist",
+      "durationInSeconds": 6.5,
+      "twist": true,
+      "stat": [
+        // 1979: Skylab (≈ 77 t; Guinness gives 75.7 t at re-entry) re-entered on 11 July 1979 UTC — the
+        //   early hours of 12 July local time — and debris fell over sparsely populated southern Western
+        //   Australia around Esperance and Balladonia (most surviving debris fell in the Indian Ocean).
+        //   https://www.nasa.gov/history/45-years-ago-skylab-reenters-earths-atmosphere/
+        //   https://www.guinnessworldrecords.com/world-records/689457-largest-piece-of-orbital-debris-to-make-an-uncontrolled-re-entry
+        //   The year rolls back from 2030 (the planned ISS deorbit) to 1979.
+        { "label": "It's happened before", "from": 2030, "value": 1979, "grouping": false, "sublabel": "Skylab: 77 t, Western Australia" },
+        // $400: the Shire of Esperance issued NASA a $400 (AUD) littering fine, tongue-in-cheek.
+        //   NASA never paid it. In 2009 US radio host Scott Barley (Highway Radio, Barstow, California)
+        //   raised the money from listeners and paid it on NASA's behalf.
+        //   https://www.esperance.wa.gov.au/esperance-museum/skylab
+        //   https://www.abc.net.au/news/2019-07-12/four-decades-on-from-skylabs-descent-from-space/11249626
+        //   https://www.mentalfloss.com/science/space/nasas-unpaid-400-littering-ticket-skylab-debris-australia
+        { "label": "Littering fine", "from": 0, "value": 400, "prefix": "$", "startSeconds": 4.0, "sublabel": "Paid in 2009 by a US radio host" }
+      ],
+      "caption": [
+        { "text": "It's happened before…", "at": 0 },
+        { "text": "…just not where you'd think.", "at": 1.0 },
+        { "text": "1979: Skylab fell on Western Australia.", "at": 2.1 },
+        { "text": "The town fined NASA $400 for littering.", "at": 4.0 }
+      ],
+      "props": { "cutAt": 2.0, "landAt": 3.0, "ticketAt": 4.0, "fine": "$400" },
+      "sfx": [
+        { "synth": "whoosh", "at": 2.0, "volume": 0.45, "params": { "duration": 0.5, "reverse": true } },
+        { "synth": "boom", "at": 2.5, "volume": 0.3, "params": { "size": 0.6 } },
+        { "synth": "whistle", "at": 3.0, "volume": 0.85, "params": { "duration": 0.95, "pitch": 0.9 } },
+        { "synth": "thump", "at": 4.0, "volume": 1 }
+      ]
+    }
+  ],
+
+  "endCard": {
+    "durationInSeconds": 3,
+    "teaser": "What if the Moon was as close as the ISS?",
+    "cta": "FOLLOW FOR MORE WHAT IFS"
+  },
+
+  // Optional: drop your own track at assets/music.mp3; otherwise the score below is generated.
+  "music": { "file": "music.mp3", "volume": 0.12 },
+  "score": { "key": "A minor", "volume": 0.5 }
+}

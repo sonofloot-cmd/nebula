@@ -25,8 +25,9 @@ export const Globe: React.FC<{
   atmosphere?: string;
   atmosphereOpacity?: number;
   emissive?: number;
-}> = ({ radius = 10, detail = 40, palette = DAY, atmosphere = "#7fc8ff", atmosphereOpacity = 0.22, emissive = 0 }) => {
-  const geo = useMemo(() => makeGlobeGeometry(radius, detail, palette), [radius, detail, palette]);
+  banding?: number;
+}> = ({ radius = 10, detail = 40, palette = DAY, atmosphere = "#7fc8ff", atmosphereOpacity = 0.22, emissive = 0, banding = 0.015 }) => {
+  const geo = useMemo(() => makeGlobeGeometry(radius, detail, palette, banding), [radius, detail, palette, banding]);
   return (
     <group>
       <mesh geometry={geo}>

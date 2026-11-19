@@ -110,6 +110,8 @@ export const makeGlobeGeometry = (
   radius: number,
   detail: number,
   colors: { ocean: string; land: string; land2: string; ice: string },
+  /** subtle light/dark ripple on the ocean (0 = flat) */
+  banding = 0.015,
 ) => {
   const mask = getWorldMask();
   const g = new THREE.IcosahedronGeometry(radius, detail); // already non-indexed
@@ -132,10 +134,33 @@ export const makeGlobeGeometry = (
     const isLand = mask.test(lon, lat);
     if (Math.abs(lat) > 68 && (isLand || Math.abs(lat) > 78)) tmp.copy(ice);
     else if (isLand) tmp.copy(land).lerp(land2, Math.min(0.7, Math.max(0, 0.3 + 0.35 * Math.sin(lon * 0.09 + 1) * Math.cos(lat * 0.11))));
-    else tmp.copy(ocean).offsetHSL(0, 0, Math.sin(lat * 0.7 + lon * 0.4) * 0.015);
+    else tmp.copy(ocean).offsetHSL(0, 0, Math.sin(lat * 0.7 + lon * 0.4) * banding);
     for (let k = 0; k < 3; k++) col.set([tmp.r, tmp.g, tmp.b], (i + k) * 3);
   }
   g.setAttribute("color", new THREE.BufferAttribute(col, 3));
   g.computeVertexNormals();
   return g;
+};
+
+const EARTH_KM = 6371;
+
+/** Point reached from (lat, lon) after `km` along initial `bearing` (degrees) on a great circle. */
+export const destination = (lat: number, lon: number, bearing: number, km: number): [number, number] => {
+  const d = km / EARTH_KM;
+  const p1 = THREE.MathUtils.degToRad(lat);
+  const l1 = THREE.MathUtils.degToRad(lon);
+  const b = THREE.MathUtils.degToRad(bearing);
+  const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(b));
+  const l2 = l1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+  return [THREE.MathUtils.radToDeg(p2), ((THREE.MathUtils.radToDeg(l2) + 540) % 360) - 180];
+};
+
+/** Unit vector on the great circle from a to b at fraction f (slerp). */
+export const slerpUnit = (a: THREE.Vector3, b: THREE.Vector3, f: number) => {
+  const an = a.clone().normalize();
+  const bn = b.clone().normalize();
+  const om = Math.acos(Math.min(1, Math.max(-1, an.dot(bn))));
+  if (om < 1e-6) return an;
+  const s = Math.sin(om);
+  return an.multiplyScalar(Math.sin((1 - f) * om) / s).add(bn.multiplyScalar(Math.sin(f * om) / s));
 };

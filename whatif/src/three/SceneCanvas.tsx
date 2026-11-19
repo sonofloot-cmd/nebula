@@ -2,7 +2,7 @@ import { ThreeCanvas } from "@remotion/three";
 import React from "react";
 import { useVideoConfig } from "remotion";
 import type { CameraMove } from "../types";
-import { CameraRig } from "./camera";
+import { CameraAt, CameraRig } from "./camera";
 
 export interface SceneCanvasProps {
   durationInFrames: number;
@@ -21,6 +21,8 @@ export interface SceneCanvasProps {
   width?: number;
   height?: number;
   top?: number;
+  /** Per-frame camera override, e.g. a hard cut inside the scene. */
+  cameraAt?: CameraAt;
   children: React.ReactNode;
 }
 
@@ -38,6 +40,7 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
   width: w,
   height: h,
   top = 0,
+  cameraAt,
   children,
 }) => {
   const video = useVideoConfig();
@@ -61,7 +64,7 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
           <directionalLight position={[-8, 4, -6]} intensity={0.45} color="#9db8ff" />
         </>
       ) : null}
-      <CameraRig move={camera} durationInFrames={durationInFrames} />
+      <CameraRig move={camera} durationInFrames={durationInFrames} cameraAt={cameraAt} />
       {children}
     </ThreeCanvas>
   );

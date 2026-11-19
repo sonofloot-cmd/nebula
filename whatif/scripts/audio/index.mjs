@@ -11,7 +11,7 @@ import { RECIPES } from "./sfx.mjs";
 
 const FPS = 30;
 // Beds are loudness-matched; one-shots are peak-normalised. Cue "volume" then sets the mix.
-const AMBIENT = new Set(["train", "street", "wind", "babble"]);
+const AMBIENT = new Set(["train", "street", "wind", "babble", "rumble"]);
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 /** Same rounding as src/timeline.ts, in seconds. */

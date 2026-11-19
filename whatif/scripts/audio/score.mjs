@@ -131,7 +131,8 @@ export const composeScore = (timeline, { key = "A minor", seed = 7 } = {}) => {
 
     // ---------- cut: riser into it, impact on it ----------
     if (si > 0) {
-      both(riser(1.0, seed + si), start - 1.0, 0.16, 0, 0.3);
+      // no riser into the twist: the score falls silent before it instead (see "gaps" below)
+      if (!sc.twist) both(riser(1.0, seed + si), start - 1.0, 0.16, 0, 0.3);
       both(impact(seed + si * 3, sc.twist ? 1.4 : 0.7 + 0.5 * (step / n)), start, sc.twist ? 0.9 : 0.55, 0, 0.45);
     }
 
@@ -212,8 +213,8 @@ export const composeScore = (timeline, { key = "A minor", seed = 7 } = {}) => {
         }
       }
     }
-    // tom fill over the last bar of bigger scenes
-    if (L >= 0.55) {
+    // tom fill over the last bar of bigger scenes (not right before the twist's silence)
+    if (L >= 0.55 && !timeline.scenes[si + 1]?.twist) {
       for (let k = 0; k < 8; k++) {
         both(tom(90 + k * 9, seed + k + si * 99), end - 2 + k * 0.25, 0.25 + 0.04 * k, k % 2 ? 0.3 : -0.3, 0.25);
       }
@@ -231,6 +232,16 @@ export const composeScore = (timeline, { key = "A minor", seed = 7 } = {}) => {
   // ---------- master ----------
   const wet = reverb(send, { size: 0.88, damp: 0.35, tail: 3 });
   mix(dry, wet, 0, 1.6);
+  // Silence before the twist: fade everything (tails too) out over `gap` seconds, then cut back in on it.
+  const gap = 0.9;
+  const twistStarts = timeline.scenes.filter((x) => x.twist).map((x) => x.start);
+  const gate = (t) => {
+    for (const ts of twistStarts) {
+      if (t > ts - gap - 0.5 && t < ts) return Math.max(0, Math.min(1, (ts - gap - t) / 0.5));
+    }
+    return 1;
+  };
+  [0, 1].forEach((c) => shape(dry[c], gate));
   [0, 1].forEach((c) => {
     filter(dry[c], "highpass", 38, 0.7, 2);
     // fade the very end; dip the first moments so the opening SFX (the sneeze) punches through

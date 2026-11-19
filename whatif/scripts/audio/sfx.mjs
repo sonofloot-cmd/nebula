@@ -250,4 +250,99 @@ export const alarm = ({ repeats = 2, freq = 980, seed = 91 } = {}) => {
   return { buf: addReverb(toStereo(out), 0.15, { size: 0.5, damp: 0.6, tail: 0.5 }), hit: 0 };
 };
 
-export const RECIPES = { sneeze, crowdSneeze, babble, street, train, boom, whoosh, wind, thump, horn, alarm };
+/**
+ * Deep re-entry rumble that BUILDS: sub-bass roar + crackling plasma, rising over `duration`.
+ * `build` = how much quieter the start is (0 = flat, 1 = from silence).
+ */
+export const rumble = ({ duration = 6, build = 0.85, seed = 101 } = {}) => {
+  const r = mulberry32(seed);
+  const out = stereo(duration);
+  const env = (t) => (1 - build + build * Math.pow(Math.min(1, t / duration), 1.6)) * Math.min(1, t / 0.3) * Math.min(1, (duration - t) / 0.25);
+  [0, 1].forEach((ch) => {
+    const roar = brown(duration, seed + ch);
+    filter(roar, "lowpass", (t) => 90 + 160 * (t / duration), 0.9, 2);
+    shape(roar, (t) => env(t) * (0.8 + 0.2 * Math.sin(t * 7 + ch)));
+    mix(out[ch], roar, 0, 2.2);
+    const sub = osc(duration, (t) => 34 + 10 * (t / duration) + 2 * Math.sin(t * 3 + ch), "sine");
+    shape(sub, env);
+    mix(out[ch], sub, 0, 0.6);
+    const hiss = noise(duration, seed + 10 + ch);
+    filter(hiss, "bandpass", (t) => 700 + 1400 * (t / duration), 0.8);
+    shape(hiss, (t) => env(t) * 0.35);
+    mix(out[ch], hiss, 0, 1);
+  });
+  // crackles get denser as it heats up
+  for (let t = 0.2; t < duration - 0.1; t += 0.02 + (1 - t / duration) * 0.25 * r()) {
+    const c = noise(0.05, seed + Math.floor(t * 997));
+    filter(c, "bandpass", 1500 + r() * 2500, 1.5);
+    shape(c, adEnv(0.001, 0.008 + r() * 0.01));
+    mix(out, c, t, 0.35 * env(t) * (0.4 + r() * 0.6), r() * 1.6 - 0.8);
+  }
+  return { buf: addReverb(out, 0.25, { size: 0.85, damp: 0.5, tail: 1.5 }), hit: 0 };
+};
+
+/** Sonic boom: the classic double crack (N-wave) with a deep, rolling, rattling tail. */
+export const sonicBoom = ({ size = 1, gap = 0.16, seed = 111 } = {}) => {
+  const dur = 3.5 * size;
+  const out = mono(dur);
+  [0, gap].forEach((at, k) => {
+    const crack = noise(0.4, seed + k);
+    filter(crack, "lowpass", 3500, 0.7);
+    shape(crack, adEnv(0.0015, 0.05));
+    mix(out, crack, at, 1.1);
+    const thud = osc(1.2, (t) => 30 + 70 * Math.exp(-t * 9), "sine");
+    shape(thud, adEnv(0.002, 0.3 * size));
+    mix(out, thud, at, 1.0);
+  });
+  const roll = brown(dur, seed + 5);
+  filter(roll, "lowpass", 180, 0.8, 2);
+  shape(roll, (t) => (t < gap ? 0 : adEnv(0.02, 0.9 * size)(t - gap)));
+  mix(out, roll, 0, 2.2);
+  // windows rattling
+  const rattle = noise(1.4, seed + 9);
+  filter(rattle, "bandpass", 2600, 4);
+  shape(rattle, (t) => adEnv(0.01, 0.35)(t) * (0.6 + 0.4 * Math.sin(t * 90)));
+  mix(out, rattle, gap + 0.05, 0.4);
+  for (let i = 0; i < out.length; i++) out[i] = Math.tanh(out[i] * 1.4);
+  return { buf: addReverb(toStereo(out), 0.45, { size: 0.92, damp: 0.45, tail: 2.5 * size }), hit: 0 };
+};
+
+/** Falling-debris whistle: a pitch that drops as it falls, ending in a distant thud (the hit). */
+export const whistle = ({ duration = 1.6, pitch = 1, thud = true, pan = 0, seed = 121 } = {}) => {
+  const out = mono(duration + 1.2);
+  const tone = osc(duration, (t) => (1800 - 1100 * Math.pow(t / duration, 0.8)) * pitch, "sine");
+  const air = noise(duration, seed);
+  filter(air, "bandpass", (t) => (1700 - 1000 * (t / duration)) * pitch, 6);
+  for (let i = 0; i < tone.length; i++) tone[i] = tone[i] * 0.55 + air[i] * 0.9;
+  shape(tone, (t) => Math.pow(t / duration, 1.2) * Math.min(1, (duration - t) / 0.04));
+  mix(out, tone, 0, 0.8);
+  if (thud) {
+    const th = osc(0.8, (t) => 45 + 60 * Math.exp(-t * 14), "sine");
+    shape(th, adEnv(0.002, 0.16));
+    mix(out, th, duration, 0.9);
+    const d = noise(0.5, seed + 1);
+    filter(d, "lowpass", 600, 0.8);
+    shape(d, adEnv(0.002, 0.08));
+    mix(out, d, duration, 0.7);
+  }
+  const st = toStereo(out);
+  st[0].forEach((_, i) => {
+    st[0][i] *= Math.cos(((pan + 1) * Math.PI) / 4) * 1.41;
+    st[1][i] *= Math.sin(((pan + 1) * Math.PI) / 4) * 1.41;
+  });
+  return { buf: addReverb(st, 0.35, { size: 0.85, damp: 0.4, tail: 1.6 }), hit: duration };
+};
+
+/** Short metallic groan / creak (the station starting to tilt). */
+export const creak = ({ duration = 1.2, pitch = 1, seed = 131 } = {}) => {
+  const out = mono(duration + 0.2);
+  const s = osc(duration, (t) => (95 + 40 * Math.sin(t * 5) + 25 * (t / duration)) * pitch, "saw");
+  filter(s, "bandpass", (t) => 500 + 300 * Math.sin(t * 7), 5);
+  filter(s, "peak", 1300, 3, 1, 8);
+  shape(s, (t) => Math.min(1, t / 0.15) * Math.min(1, (duration - t) / 0.3) * (0.6 + 0.4 * Math.sin(t * 23)));
+  mix(out, s, 0, 1);
+  void seed;
+  return { buf: addReverb(toStereo(out), 0.5, { size: 0.9, damp: 0.3, tail: 1.8 }), hit: 0 };
+};
+
+export const RECIPES = { sneeze, crowdSneeze, babble, street, train, boom, whoosh, wind, thump, horn, alarm, rumble, sonicBoom, whistle, creak };

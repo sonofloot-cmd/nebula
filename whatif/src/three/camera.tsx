@@ -40,16 +40,21 @@ export const evaluateCamera = (move: CameraMove, p: number) => {
  * Drives the R3F camera from the current Remotion frame. Never static: every
  * scene passes a move with a from/to or orbit, and a tiny handheld drift is added.
  */
-export const CameraRig: React.FC<{ move: CameraMove; durationInFrames: number; drift?: number }> = ({
+/** Optional per-frame override (e.g. a hard cut inside one scene). Return null to use the move. */
+export type CameraAt = (frame: number) => { pos: Vec3; target: Vec3; fov?: number } | null;
+
+export const CameraRig: React.FC<{ move: CameraMove; durationInFrames: number; drift?: number; cameraAt?: CameraAt }> = ({
   move,
   durationInFrames,
   drift = 0.015,
+  cameraAt,
 }) => {
   const frame = useCurrentFrame();
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   useLayoutEffect(() => {
     const p = frame / Math.max(1, durationInFrames - 1);
-    const { pos, target, fov } = evaluateCamera(move, p);
+    const o = cameraAt?.(frame);
+    const { pos, target, fov } = o ? { ...o, fov: o.fov ?? move.fov ?? 45 } : evaluateCamera(move, p);
     const dist = Math.hypot(pos[0] - target[0], pos[1] - target[1], pos[2] - target[2]);
     const wobble = drift * dist;
     camera.position.set(
@@ -62,6 +67,6 @@ export const CameraRig: React.FC<{ move: CameraMove; durationInFrames: number; d
     camera.far = dist * 40 + 200;
     camera.updateProjectionMatrix();
     camera.lookAt(target[0], target[1], target[2]);
-  }, [frame, move, durationInFrames, camera, drift]);
+  }, [frame, move, durationInFrames, camera, drift, cameraAt]);
   return null;
 };

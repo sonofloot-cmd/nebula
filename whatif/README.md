@@ -8,6 +8,7 @@ counters and captions all render in one pass to a **1080×1920, 30 fps, H.264 MP
 cd whatif
 npm install
 npm run render -- episodes/sneeze.json            # → out/sneeze.mp4
+npm run render -- episodes/iss-nyc.json           # → out/iss-nyc.mp4  (episode 2)
 npm run test-clip -- episodes/sneeze.json         # → out/sneeze-test.mp4 (first 5 s)
 npm run preview -- episodes/sneeze.json           # → out/sneeze-preview.mp4 (whole episode, half resolution)
 npm run test-clip -- episodes/sneeze.json --from=30   # 5 s starting at 0:30
@@ -62,9 +63,11 @@ Also on every video: a watermark at the bottom right (`"handle"`) and a synthesi
         "value": 8300000000,               // counts up from "from" (default 0)
         "sublabel": "per second",
         "decimals": 0, "prefix": "", "suffix": "",
+        "grouping": true,                   // false for years: 1979, not 1,979
         "startSeconds": 0.15                // optional: when counting starts (it always runs to the cut)
       },
-      "caption": "Max ten words, white, soft shadow.",
+      "caption": "Max ten words, white, soft shadow.",   // aim for ≤ 8; never start with "Twist"
+      // or a timed sequence: [{ "text": "It's happened before…", "at": 0 }, { "text": "…just not here.", "at": 1.1 }]
       "camera": { "from": [0, 2, 10], "to": [0, 1, 6] },  // optional override of the scene's move
       "props": { }                          // free-form, passed to the scene
     },
@@ -80,8 +83,10 @@ Also on every video: a watermark at the bottom right (`"handle"`) and a synthesi
 }
 ```
 
-`npm run render` checks the format rules before it renders. A caption over 10 words or a missing
-component stops the render. Scene count, scene length, total length (35–60 s) and a missing twist
+`npm run render` checks the format rules before it renders. A caption over 10 words, a caption
+starting with "Twist", or a missing component stops the render. Captions over 8 words and
+sub-labels over 34 characters produce warnings (sub-labels always stay on one line: the font
+shrinks to fit, down to 36 px). Scene count, scene length, total length (35–60 s) and a missing twist
 produce warnings only.
 
 ### Writing a scene
@@ -135,7 +140,12 @@ export default LavaCloseUp;
 | `three/props` | `Person` (low-poly), `Crowd` (thousands, instanced), `Buildings` + `makeCity` (procedural box city). |
 | `three/vehicles` | `Cockpit` (airliner flight deck), `Pilot`, `Car` (open-glass cabin), `ShutEyeHead`. |
 | `SceneCanvas` `width`/`height`/`top` | Split-screen scenes: two 3D canvases in one shot (see `sneeze/EyesShut`). |
-| `three/Globe`, `three/geo` | Low-poly Earth from Natural Earth data, `Stars`, `sampleLandPoints`, `latLonToVec3`, country masks (`getCountryPolys("356")`). |
+| `three/Globe`, `three/geo` | Low-poly Earth from Natural Earth data, `Stars`, `sampleLandPoints`, `latLonToVec3`, country masks (`getCountryPolys("356")`), `destination` (great-circle point from bearing + km), `slerpUnit`. |
+| `three/earth` | `NightEarth`: dark globe with warm city-light specks (`DARK_EARTH` palette). |
+| `three/iss` | Generic low-poly space station in metres (109 m), with `glow` (re-entry heat), `breakT` (wings tear off, then truss and modules split), `silhouette` (for shadows). |
+| `three/text` | `TextPanel` / `TextLabel`: canvas-drawn text for billboards, signs and map labels (waits for the Inter font). |
+| `three/glow` | `Glow` (additive light blob for fireballs, lamps, bloom) and `SkyDome` (vertical-gradient backdrop). |
+| `SceneCanvas` `cameraAt` | Per-frame camera override, e.g. a hard cut inside one scene (see `iss/OutbackTwist`). |
 
 Safe areas: the stat block sits 150 px from the top and the caption 430 px from the bottom. That
 keeps both clear of the TikTok/Reels UI (the top tabs, the right-hand button rail and the bottom
@@ -148,8 +158,9 @@ Every render builds a soundtrack automatically. All of it is synthesised in code
 
 - **Score.** Auto-composed from the episode's timeline at 120 BPM, so 6 s scenes are exactly
   3 bars. Each escalating scene adds a layer: pad and arpeggio, then the bass pulse, kick,
-  snare and hats, then tom fills. Every cut gets a riser and an impact. The twist scene drops
-  to a muffled heartbeat with a drone, and the end card resolves. Settings:
+  snare and hats, then tom fills. Every cut gets a riser and an impact. The score falls
+  silent ~0.9 s before the twist, the twist scene drops to a muffled heartbeat with a drone,
+  and the end card resolves. Settings:
   `"score": { "key": "A minor", "volume": 0.55 }`, or `"score": false` to turn it off.
 - **Your own music.** Put a track at `assets/music.mp3` (or set `"music": { "file": … }`). It
   replaces the score, loops, and plays low (`music.volume`, default 0.12) with fades. Use music
@@ -166,7 +177,9 @@ Every render builds a soundtrack automatically. All of it is synthesised in code
 
   Synth recipes: `sneeze`, `crowdSneeze` (count, spread, distance, murmur), `babble`, `street`,
   `train`, `boom` (size), `whoosh` (duration, reverse), `wind` (duration, airy), `thump`,
-  `horn` (duration, pitch), `alarm` (repeats). `sneeze` also takes `big: true` for the opening frame.
+  `horn` (duration, pitch), `alarm` (repeats), `rumble` (duration, build: a deep roar that builds),
+  `sonicBoom` (size, gap: double crack + rattling tail), `whistle` (duration, pitch, pan, thud:
+  falling debris; the hit is the thud), `creak` (duration, pitch). `sneeze` also takes `big: true` for the opening frame.
   Add `"align": "start"` to a cue to start the sound at `at` instead of lining up its hit.
   Adding a recipe is one function in `scripts/audio/sfx.mjs`.
 
@@ -190,5 +203,20 @@ estimates are marked **ESTIMATE**. In short:
 - 332 trillion droplets: derived, 8.3 B × 40,000 (upper bound)
 - Eyes closing during a sneeze: involuntary reflex. The ~1 s duration is an estimate.
 - Up to 20,000 planes airborne: Flightradar24
+
+## Episode 2 sources
+
+Every on-screen number in `episodes/iss-nyc.json` has its source in a comment beside it, and
+estimates are marked **est.** In short:
+
+- ISS mass 420 t (419,725 kg) and 109 m end to end ("one yard shy" of a football field incl. end zones): NASA ISS Facts and Figures
+- 28,000 km/h (17,500 mph; NASA: "about five miles per second"), 16 orbits a day: NASA
+- LA → New York ≈ 8 min: derived, 3,936 km great-circle ÷ 28,000 km/h = 8.4 min
+- Re-entry heat 1,500–1,650 °C: ESA Mir FAQ (>1,500 °C); 1,650 °C upper figure is secondary
+- Dense tanks survive: Aerospace Corp. recovered-debris analysis (2005); ESA CleanSat
+- ~80 t surviving debris: **est.**, 420 t × ~20 % (Skylab ≈ 26 % recovered, Mir ≈ 17 % predicted)
+- Footprint up to 6,000 km: NASA US Deorbit Vehicle procurement ("6,000 km or less footprint"); along the ISS ground track (55° from New York) that reaches central France
+- Point Nemo 2,688 km from land: NOAA; ISS ~400 km up (NASA), so the crew are *often* the nearest people
+- Skylab, 1979, Esperance / Balladonia WA; $400 littering fine never paid by NASA, paid in 2009 by US radio host Scott Barley: NASA history office, Shire of Esperance, ABC
 
 Map data: Natural Earth (public domain) via `world-atlas`. Fonts: Playfair Display and Inter (SIL OFL).

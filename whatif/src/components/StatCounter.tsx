@@ -3,8 +3,11 @@ import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "re
 import { SANS } from "../fonts";
 import type { Stat } from "../types";
 
-const formatNumber = (v: number, decimals: number) =>
-  v.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+const formatNumber = (v: number, decimals: number, grouping = true) =>
+  v.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: grouping });
+
+/** Sub-label size: 52 px, shrunk so it always fits on ONE line (phone-readable floor of 36 px). */
+export const sublabelFontSize = (text: string) => Math.max(36, Math.min(52, Math.floor(960 / Math.max(1, text.length * 0.56))));
 
 /** Seconds → "MM:SS.cc" */
 export const formatCountdown = (seconds: number) => {
@@ -24,7 +27,7 @@ export const statText = (stat: Stat, progress: number, from = 0) => {
   }
   const v = interpolate(progress, [0, 1], [stat.from ?? from, stat.value]);
   const rounded = decimals === 0 ? Math.round(v) : v;
-  return `${stat.prefix ?? ""}${formatNumber(rounded, decimals)}${stat.suffix ?? ""}`;
+  return `${stat.prefix ?? ""}${formatNumber(rounded, decimals, stat.grouping ?? true)}${stat.suffix ?? ""}`;
 };
 
 /**
@@ -142,11 +145,12 @@ export const StatCounter: React.FC<{
       {stat.sublabel ? (
         <div
           style={{
-            fontSize: 52,
+            fontSize: sublabelFontSize(stat.sublabel),
             fontWeight: 600,
             lineHeight: 1.12,
             marginTop: 14,
             maxWidth: 960,
+            whiteSpace: "nowrap",
             opacity: 0.88 * flip,
             letterSpacing: "-0.005em",
           }}

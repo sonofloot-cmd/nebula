@@ -64,9 +64,19 @@ export const validateEpisode = (ep, scenesDir) => {
     stats.forEach((st, k) =>
       req(st?.label && typeof st?.value === "number", `${n}: stat ${k + 1} needs \`label\` and a numeric \`value\``),
     );
-    req(typeof s.caption === "string", `${n}: \`caption\` is required`);
-    const words = (s.caption ?? "").split(/\s+/).filter(Boolean).length;
-    if (words > 10) errors.push(`${n}: caption has ${words} words (max 10): "${s.caption}"`);
+    const cues = typeof s.caption === "string" ? [{ text: s.caption, at: 0 }] : s.caption;
+    req(Array.isArray(cues) && cues.length > 0, `${n}: \`caption\` is required (a string or [{ text, at }])`);
+    (Array.isArray(cues) ? cues : []).forEach((c) => {
+      req(typeof c?.text === "string" && typeof c?.at === "number", `${n}: caption cues need \`text\` and a numeric \`at\``);
+      const words = (c?.text ?? "").split(/\s+/).filter(Boolean).length;
+      if (words > 10) errors.push(`${n}: caption has ${words} words (max 10): "${c.text}"`);
+      else if (words > 8) warnings.push(`${n}: caption has ${words} words (aim for ≤ 8): "${c.text}"`);
+      if (/^\s*twist\b/i.test(c?.text ?? "")) errors.push(`${n}: don't start a caption with "Twist" — the stat block already says TWIST`);
+    });
+    stats.forEach((st) => {
+      if ((st?.sublabel ?? "").length > 34)
+        warnings.push(`${n}: sub-label is ${st.sublabel.length} characters; it shrinks to fit one line, keep it ≤ 34: "${st.sublabel}"`);
+    });
   });
   if (!ep.scenes.some((s) => s.twist)) warnings.push("No scene is marked `twist: true`.");
 

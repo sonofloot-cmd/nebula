@@ -1,20 +1,13 @@
 import React from "react";
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { SANS } from "../fonts";
+import type { CaptionCue } from "../types";
 
-/** Bottom caption: one short punchy line, white with a soft shadow. Words pop in. */
-export const Caption: React.FC<{ text: string; durationInFrames: number; delay?: number }> = ({
-  text,
-  durationInFrames,
-  delay = 0,
-}) => {
-  const frame = useCurrentFrame() - delay;
+/** One line whose words pop in from `frame` 0; fades out over the last 6 frames of `available`. */
+const Line: React.FC<{ text: string; frame: number; available: number }> = ({ text, frame, available }) => {
   const { fps } = useVideoConfig();
-  if (frame < 0) return null;
   const words = text.split(/\s+/).filter(Boolean);
-  const available = durationInFrames - delay;
   const exit = interpolate(frame, [available - 6, available], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-
   return (
     <div
       style={{
@@ -46,4 +39,31 @@ export const Caption: React.FC<{ text: string; durationInFrames: number; delay?:
       })}
     </div>
   );
+};
+
+/**
+ * Bottom caption: one short punchy line, white with a soft shadow. Words pop in.
+ * `text` may also be a timed sequence of lines; each shows until the next one starts.
+ */
+export const Caption: React.FC<{ text: string | CaptionCue[]; durationInFrames: number; delay?: number }> = ({
+  text,
+  durationInFrames,
+  delay = 0,
+}) => {
+  const frame = useCurrentFrame() - delay;
+  const { fps } = useVideoConfig();
+  if (frame < 0) return null;
+  const available = durationInFrames - delay;
+  if (typeof text === "string") return <Line text={text} frame={frame} available={available} />;
+
+  // Cue times are scene seconds; the first cue starts no earlier than `delay`.
+  const starts = text.map((c) => Math.max(0, Math.round(c.at * fps) - delay));
+  let idx = -1;
+  starts.forEach((s, i) => {
+    if (frame >= s) idx = i;
+  });
+  if (idx < 0) return null;
+  const start = starts[idx];
+  const end = idx + 1 < text.length ? starts[idx + 1] : available;
+  return <Line key={idx} text={text[idx].text} frame={frame - start} available={end - start} />;
 };

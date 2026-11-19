@@ -38,13 +38,20 @@ export interface Stat {
   decimals?: number;
   prefix?: string;
   suffix?: string;
-  /** Tiny line under the number. */
+  /** Tiny line under the number. Always one line: the font shrinks to fit (keep it ≤ ~32 characters). */
   sublabel?: string;
+  /** Thousands separators (default true). Set false for years, e.g. 1979. */
+  grouping?: boolean;
   /**
    * Seconds into the scene (after any hook delay) when this stat starts counting.
    * It keeps counting until the next stage starts or the scene cuts — never frozen.
    */
   startSeconds?: number;
+}
+
+export interface CaptionCue {
+  text: string;
+  at: number;
 }
 
 export interface SceneDef {
@@ -53,8 +60,12 @@ export interface SceneDef {
   durationInSeconds: number;
   /** One stat, or several stages shown on the same shot (e.g. SNEEZES → DROPLETS). */
   stat: Stat | Stat[];
-  /** One short punchy line, max 10 words. */
-  caption: string;
+  /**
+   * One short punchy line, max 10 words. Or a timed sequence of lines:
+   * [{ "text": "It's happened before…", "at": 0 }, { "text": "…just not where you'd think.", "at": 1.1 }]
+   * (`at` = seconds into the scene; each line shows until the next one).
+   */
+  caption: string | CaptionCue[];
   /** Override the scene's default camera move (merged over the default). */
   camera?: Partial<CameraMove>;
   /** Marks the twist scene: red accent + countdown styling. */
