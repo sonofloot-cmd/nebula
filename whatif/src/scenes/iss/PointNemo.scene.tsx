@@ -135,7 +135,7 @@ const PointNemo: React.FC<SceneComponentProps> = ({ durationInFrames, props }) =
             return (
               <group key={i}>
                 <Glow position={[p.x, p.y, p.z]} size={0.55} color="#ffd27a" opacity={lineIn} />
-                <TextLabel card={{ lines: [n.name], width: 640, height: 128, fg: "#ffd27a", size: 80, weight: 800, glow: "#000000" }} height={0.5} opacity={lineIn} position={n.lat < -60 ? [p.x + 1.9, p.y + 0.1, p.z + 0.3] : [p.x, p.y + 0.42, p.z + 0.3]} />
+                <TextLabel card={{ lines: [n.name], width: 640, height: 128, fg: "#ffd27a", size: 80, weight: 800, glow: "#000000" }} height={0.5} opacity={lineIn} position={[p.x + 1.7, p.y - 0.1, p.z + 0.3]} />
               </group>
             );
           })}
