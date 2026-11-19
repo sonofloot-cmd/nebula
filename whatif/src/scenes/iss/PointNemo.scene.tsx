@@ -17,7 +17,7 @@ import type { SceneComponentProps } from "../../types";
  * WHY IT WON'T HAPPEN: pull back to Point Nemo, the ocean point farthest from land and the
  * planned crash zone. Pulsing target rings, dashed lines to the three nearest bits of land,
  * and the station passing overhead (its crew are often the nearest humans).
- * props: { nemo?: [lat, lon], neighbours?: Array<{ name, lat, lon }> }
+ * props: { nemo?: [lat, lon], neighbours?: Array<{ name, lat, lon, dx?, dy? (label offset from the pin) }> }
  */
 
 const R = 10;
@@ -26,7 +26,7 @@ const OCEAN: GlobePalette = { ocean: "#0a2550", land: "#3a4e6e", land2: "#44597a
 const PointNemo: React.FC<SceneComponentProps> = ({ durationInFrames, props }) => {
   const t = useSceneTime();
   const [nlat, nlon] = (props.nemo as [number, number]) ?? [-48.877, -123.393];
-  const neighbours = (props.neighbours as Array<{ name: string; lat: number; lon: number }>) ?? [];
+  const neighbours = (props.neighbours as Array<{ name: string; lat: number; lon: number; dx?: number; dy?: number }>) ?? [];
   const nemo = useMemo(() => latLonToVec3(nlat, nlon, 1), [nlat, nlon]);
   const nb = useMemo(() => neighbours.map((n) => ({ ...n, v: latLonToVec3(n.lat, n.lon, 1) })), [neighbours]);
 
@@ -39,6 +39,7 @@ const PointNemo: React.FC<SceneComponentProps> = ({ durationInFrames, props }) =
   }, [nemo]);
 
   const lineIn = smoothstep(1.1, 2.3, t);
+  const labelIn = smoothstep(2.4, 2.9, t);
   const lines = useCallback<ParticleFn>(
     (i, time, out) => {
       const k = i % Math.max(1, nb.length);
@@ -134,8 +135,8 @@ const PointNemo: React.FC<SceneComponentProps> = ({ durationInFrames, props }) =
             const p = n.v.clone().multiplyScalar(R * 1.03);
             return (
               <group key={i}>
-                <Glow position={[p.x, p.y, p.z]} size={0.55} color="#ffd27a" opacity={lineIn} />
-                <TextLabel card={{ lines: [n.name], width: 640, height: 128, fg: "#ffd27a", size: 80, weight: 800, glow: "#000000" }} height={0.5} opacity={lineIn} position={[p.x + 1.7, p.y - 0.1, p.z + 0.3]} />
+                <Glow position={[p.x, p.y, p.z]} size={0.55} color="#ffd27a" opacity={labelIn} />
+                <TextLabel card={{ lines: [n.name], width: 640, height: 128, fg: "#ffd27a", size: 80, weight: 800, glow: "#000000" }} height={0.5} opacity={labelIn} position={[p.x + (n.dx ?? 0), p.y + (n.dy ?? 0.42), p.z + 0.3]} />
               </group>
             );
           })}

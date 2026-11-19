@@ -153,9 +153,9 @@
       "props": {
         "nemo": [-48.877, -123.393],
         "neighbours": [
-          { "name": "DUCIE IS.", "lat": -24.68, "lon": -124.79 },
-          { "name": "EASTER IS.", "lat": -27.20, "lon": -109.45 },
-          { "name": "ANTARCTICA", "lat": -72.97, "lon": -126.37 }
+          { "name": "DUCIE IS.", "lat": -24.68, "lon": -124.79, "dx": 0, "dy": -0.6 },
+          { "name": "EASTER IS.", "lat": -27.20, "lon": -109.45, "dx": 0.6, "dy": 0.45 },
+          { "name": "ANTARCTICA", "lat": -72.97, "lon": -126.37, "dx": 1.8, "dy": 0 }
         ]
       },
       // Sound stops early: the score falls silent ~0.9 s before the twist (scripts/audio/score.mjs).
