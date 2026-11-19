@@ -25,7 +25,7 @@ const sec = (s: number) => Math.round(s * FPS);
 
 /** The hook plays OVER the first scene; the end card follows the last scene. */
 export const buildTimeline = (episode: Episode): Timeline => {
-  const hookFrames = sec(episode.hook?.durationInSeconds ?? DEFAULT_HOOK_SECONDS);
+  const hookFrames = Math.max(0, sec(episode.hook?.durationInSeconds ?? DEFAULT_HOOK_SECONDS));
   let cursor = 0;
   const scenes = episode.scenes.map((s, index) => {
     const slot = { index, from: cursor, durationInFrames: sec(s.durationInSeconds) };

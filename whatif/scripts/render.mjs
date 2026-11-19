@@ -13,6 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateAudio, validateAudio } from "./audio/index.mjs";
+import { buildVoiceover } from "./audio/voiceover.mjs";
 import { loadEpisode, validateEpisode } from "./episode.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -30,6 +31,19 @@ if (!file) {
 
 const episodePath = path.resolve(process.cwd(), file);
 const episode = loadEpisode(episodePath);
+// Narration first: it sets the length of any scene without durationInSeconds.
+let voiceover = { cues: [], words: {}, script: "" };
+try {
+  voiceover = buildVoiceover(episode, root);
+} catch (e) {
+  console.error(`✖  ${e.message}`);
+  process.exit(1);
+}
+if (voiceover.script) {
+  fs.mkdirSync(path.join(root, "out"), { recursive: true });
+  fs.writeFileSync(path.join(root, "out", `${episode.id}-script.txt`), voiceover.script);
+  console.log(`🎙  Narration script → out/${episode.id}-script.txt`);
+}
 const { errors, warnings, total } = validateEpisode(episode, path.join(root, "src/scenes"));
 errors.push(...validateAudio(episode));
 warnings.forEach((w) => console.warn(`⚠  ${w}`));
@@ -41,14 +55,14 @@ console.log(`Episode "${episode.id}" — ${episode.scenes.length} scenes, ${tota
 if (flag("check")) process.exit(0);
 
 // Soundtrack: auto score (or your assets/music.mp3) + synthesised SFX, cached in assets/generated/.
-const audio = flag("mute") ? [] : generateAudio(episode, root);
+const audio = flag("mute") ? [] : [...generateAudio(episode, root), ...voiceover.cues];
 for (const cue of audio) {
   if (!fs.existsSync(path.join(root, "assets", cue.file))) {
     console.error(`✖  Missing audio file assets/${cue.file}`);
     process.exit(1);
   }
 }
-const inputProps = { episode, audio };
+const inputProps = { episode, audio, voWords: voiceover.words };
 
 // Browser: REMOTION_BROWSER env, else a pre-installed headless shell if present, else Remotion downloads one.
 const candidates = [

@@ -27,8 +27,26 @@ export const formatElapsed = (days: number) => {
   return `Year ${Math.round(days / 365)}`;
 };
 
+const SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+/** kg → "200 g" / "115 kg" / "1,716 tonnes" / "5.97 × 10²⁴ kg". */
+export const formatMass = (kg: number) => {
+  if (kg < 1) return `${Math.round(kg * 1000)} g`;
+  if (kg < 1e4) return `${Math.round(kg).toLocaleString("en-US")} kg`;
+  if (kg < 1e7) return `${Math.round(kg / 1000).toLocaleString("en-US")} tonnes`;
+  const e = Math.floor(Math.log10(kg));
+  const m = kg / 10 ** e;
+  return `${m.toFixed(2)} × 10${String(e).split("").map((d) => SUP[Number(d)]).join("")} kg`;
+};
+const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
+
 export const statText = (stat: Stat, progress: number, from = 0) => {
   const decimals = stat.decimals ?? 0;
+  if (stat.format === "mass") {
+    // exponential growth: interpolate in log space
+    const a = Math.log(Math.max(1e-9, stat.from ?? from));
+    const b = Math.log(Math.max(1e-9, stat.value));
+    return `${stat.prefix ?? ""}${formatMass(Math.exp(a + (b - a) * progress))}${stat.suffix ?? ""}`;
+  }
   if (stat.format === "elapsed") {
     const v = interpolate(progress, [0, 1], [stat.from ?? from, stat.value]);
     return `${stat.prefix ?? ""}${formatElapsed(v)}${stat.suffix ?? ""}`;
@@ -60,7 +78,9 @@ export const StatCounter: React.FC<{
   delay?: number;
   accent: string;
   twist?: boolean;
-}> = ({ stats, durationInFrames, delay = 0, accent, twist }) => {
+  /** bright theme: draw the block on a dark rounded card so it reads over a pastel sky */
+  card?: boolean;
+}> = ({ stats, durationInFrames, delay = 0, accent, twist, card }) => {
   const frame = useCurrentFrame() - delay;
   const { fps } = useVideoConfig();
   if (frame < 0 || stats.length === 0) return null;
@@ -92,8 +112,11 @@ export const StatCounter: React.FC<{
   });
   const progress = isCountdown ? x : isElapsed ? jump : countCurve(x);
   const text = statText(stat, progress, prevValue);
+  const subNum = (v: number) => (stat.sublabelFormat === "clock" ? clock(v) : formatNumber(v, stat.sublabelDecimals ?? 0));
   const sub =
-    stat.sublabel && stat.sublabelValue !== undefined
+    stat.sublabel && stat.sublabelValue !== undefined && stat.sublabelFormat === "clock"
+      ? stat.sublabel.replace("{n}", subNum(interpolate(isElapsed ? jump : countCurve(x), [0, 1], [stat.sublabelFrom ?? 0, stat.sublabelValue])))
+      : stat.sublabel && stat.sublabelValue !== undefined
       ? stat.sublabel.replace(
           "{n}",
           formatNumber(
@@ -107,7 +130,7 @@ export const StatCounter: React.FC<{
   // size the sub-label by its final text so it never jumps while counting
   const subFinal =
     stat.sublabel && stat.sublabelValue !== undefined
-      ? stat.sublabel.replace("{n}", formatNumber(stat.sublabelValue, stat.sublabelDecimals ?? 0))
+      ? stat.sublabel.replace("{n}", subNum(stat.sublabelValue))
       : stat.sublabel;
 
   // Size by the stage's FINAL string so the number never changes size while counting.
@@ -126,10 +149,11 @@ export const StatCounter: React.FC<{
         position: "absolute",
         top: 150,
         left: 60,
-        right: 60,
+        right: card ? undefined : 60,
         fontFamily: SANS,
         color: "white",
         opacity: enter,
+        ...(card ? { background: "rgba(16,18,32,0.72)", padding: "22px 34px 26px", borderRadius: 30, maxWidth: 960 } : {}),
         transform: `translateY(${(1 - enter) * -30}px)`,
         textShadow: "0 4px 24px rgba(0,0,0,0.5)",
       }}

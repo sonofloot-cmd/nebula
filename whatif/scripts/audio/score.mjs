@@ -261,3 +261,83 @@ export const composeScore = (timeline, { key = "A minor", seed = 7, calm = false
   });
   return master([dry[0].subarray(0, Math.round(total * SR)), dry[1].subarray(0, Math.round(total * SR))], -1, 1.1);
 };
+
+/**
+ * UPBEAT style (bright comedy episodes): C-major I–V–vi–IV loop at 120 BPM — plucky off-beat
+ * chords, bouncy bass, kick/clap/shaker and a sparse glockenspiel motif. Scenes with `drop`
+ * fall to a low drone (no drums). No risers or hits, so the voiceover sits on top.
+ */
+export const composeUpbeat = (timeline, { seed = 11 } = {}) => {
+  const total = timeline.total;
+  const dry = stereo(total + 1);
+  const send = stereo(total + 1);
+  const both = (buf, at, gain, pan = 0, wet = 0.2) => {
+    mix(dry, buf, at, gain, pan);
+    if (wet) mix(send, buf, at, gain * wet, pan);
+  };
+  const prog = [
+    [60, 64, 67], // C
+    [55, 59, 62], // G
+    [57, 60, 64], // Am
+    [53, 57, 60], // F
+  ];
+  const glock = [76, 79, 81, 79, 76, 74, 72, 74];
+  const inDrop = (t) => timeline.scenes.some((sc) => sc.drop && t >= sc.start && t < sc.start + sc.dur);
+  const bar = BEAT * 4;
+  const nBars = Math.ceil(total / bar);
+  for (let b = 0; b < nBars; b++) {
+    const chord = prog[b % 4];
+    for (let q = 0; q < 8; q++) {
+      const t = b * bar + q * (BEAT / 2);
+      if (t >= total) break;
+      if (inDrop(t)) continue;
+      const onBeat = q % 2 === 0;
+      if (onBeat) {
+        // bass: root on 1 and 3, fifth on 2 and 4
+        const note = chord[0] - 24 + (q % 4 === 2 ? 7 : 0);
+        const bass = osc(0.3, midiHz(note), "tri");
+        shape(bass, adEnv(0.004, 0.12));
+        both(bass, t, 0.32, 0, 0);
+        if (q === 0 || q === 4) both(kick(), t, 0.42, 0, 0);
+        if (q === 2 || q === 6) {
+          const clap = noise(0.2, seed + b * 9 + q);
+          filter(clap, "bandpass", 1500, 0.9);
+          shape(clap, adEnv(0.002, 0.05));
+          both(clap, t, 0.22, 0.1, 0.4);
+        }
+      } else {
+        // off-beat "ukulele" strum: quick rolled triad
+        chord.forEach((n, k) => both(pluck(midiHz(n + 12), 0.35, 0.7), t + k * 0.012, 0.075, -0.2 + 0.2 * k, 0.25));
+      }
+      both(hat(seed + b * 31 + q), t + BEAT / 4, 0.05, 0.35, 0.1);
+    }
+    // glockenspiel motif every other bar
+    if (b % 2 === 1) {
+      for (let k = 0; k < 4; k++) {
+        const t = b * bar + k * BEAT;
+        if (t >= total || inDrop(t)) continue;
+        const g = osc(1.2, midiHz(glock[(b * 4 + k) % glock.length]), "sine");
+        const g2 = osc(1.2, midiHz(glock[(b * 4 + k) % glock.length]) * 2.76, "sine");
+        for (let i = 0; i < g.length; i++) g[i] = g[i] + g2[i] * 0.25;
+        shape(g, adEnv(0.002, 0.35));
+        both(g, t, 0.05, 0.3, 0.6);
+      }
+    }
+  }
+  // drops: low, dark drone under the moment
+  timeline.scenes.filter((sc) => sc.drop).forEach((sc) => {
+    const d = osc(sc.dur + 0.5, midiHz(33), "tri");
+    const d2 = osc(sc.dur + 0.5, midiHz(40), "sine");
+    for (let i = 0; i < d.length; i++) d[i] = d[i] + d2[i] * 0.6;
+    filter(d, "lowpass", 300, 0.7);
+    shape(d, (t) => Math.min(1, t / 0.4) * Math.min(1, (sc.dur + 0.3 - t) / 0.4));
+    both(d, sc.start, 0.16, 0, 0.3);
+  });
+  const wet = reverb(send, { size: 0.8, damp: 0.4, tail: 1.8 });
+  mix(dry, wet, 0, 1.2);
+  [0, 1].forEach((c) => {
+    filter(dry[c], "highpass", 40, 0.7, 2);
+    shape(dry[c], (t) => Math.min(1, t / 0.05) * Math.min(1, Math.max(0, (total - t) / 0.15)));
+  });
+  return master([dry[0].subarray(0, Math.round(total * SR)), dry[1].subarray(0, Math.round(total * SR))], -1, 1.05);
+};

@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { SR, fadeEdges, normalize, writeWav } from "./dsp.mjs";
-import { composeScore } from "./score.mjs";
+import { composeScore, composeUpbeat } from "./score.mjs";
 import { RECIPES } from "./sfx.mjs";
 
 const FPS = 30;
@@ -19,7 +19,7 @@ export const timelineSeconds = (ep) => {
   let cursor = 0;
   const scenes = ep.scenes.map((s) => {
     const frames = Math.round(s.durationInSeconds * FPS);
-    const sc = { start: cursor / FPS, dur: frames / FPS, twist: !!s.twist };
+    const sc = { start: cursor / FPS, dur: frames / FPS, twist: !!s.twist, drop: !!s.musicDrop };
     cursor += frames;
     return sc;
   });
@@ -88,7 +88,7 @@ export const generateAudio = (ep, root, { log = console.log } = {}) => {
     log(`♪  Music: assets/${musicFile}`);
   } else if (ep.score !== false) {
     const opts = typeof ep.score === "object" ? ep.score : {};
-    const { file } = build("score.wav", { tl, opts }, () => ({ buf: composeScore(tl, opts) }));
+    const { file } = build("score.wav", { tl, opts }, () => ({ buf: opts.style === "upbeat" ? composeUpbeat(tl, opts) : composeScore(tl, opts) }));
     cues.push({ file, from: 0, volume: opts.volume ?? 0.55, music: true });
     log("♪  Music: auto-composed score (add assets/music.mp3 to use your own)");
   }

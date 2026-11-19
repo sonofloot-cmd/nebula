@@ -2,7 +2,12 @@ import React from "react";
 import { AbsoluteFill } from "remotion";
 
 /** Legibility gradients (top for the stat block, bottom for captions) + vignette. */
-export const Grade: React.FC = () => (
+export const Grade: React.FC<{ light?: boolean }> = ({ light }) =>
+  light ? (
+    <AbsoluteFill style={{ pointerEvents: "none" }}>
+      <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0) 70%, rgba(0,0,0,0.18) 100%)" }} />
+    </AbsoluteFill>
+  ) : (
   <AbsoluteFill style={{ pointerEvents: "none" }}>
     <AbsoluteFill
       style={{

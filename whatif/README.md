@@ -10,6 +10,7 @@ npm install
 npm run render -- episodes/sneeze.json            # → out/sneeze.mp4
 npm run render -- episodes/iss-nyc.json           # → out/iss-nyc.mp4  (episode 2)
 npm run render -- episodes/messy-room.json        # → out/messy-room.mp4  (episode 3, time-skip format)
+npm run render -- episodes/phone-doubling.json    # → out/phone-doubling.mp4  (episode 4, doubling comedy + voiceover)
 npm run test-clip -- episodes/sneeze.json         # → out/sneeze-test.mp4 (first 5 s)
 npm run preview -- episodes/sneeze.json           # → out/sneeze-preview.mp4 (whole episode, half resolution)
 npm run test-clip -- episodes/sneeze.json --from=30   # 5 s starting at 0:30
@@ -101,6 +102,35 @@ day/night cycles. The stat uses `"format": "elapsed"` (value/from in **days**, s
 number inside the sub-label: `"sublabel": "Dust mites in bed: ~{n} (est.)", "sublabelValue": 500000`.
 `"hook": { "text": … }` lets the hook title differ from the end-card question, and
 `"score": { "calm": true }` gives soft pads and plucks with no drums or hits.
+
+### Doubling comedy format (voiceover, bright)
+
+`episodes/phone-doubling.json` is narration-driven: each scene has a `"vo"` line, and its length
+follows the line (leave out `durationInSeconds`; `voAt`, `tail`, `minSeconds` tune it). Captions
+become bold, outlined, word-by-word phrases synced to the voice. Other switches:
+`"theme": "bright"` (stat block on a dark card, light flash cuts, no dark grade),
+`"hook": { "durationInSeconds": 0 }` (no serif title; the narration is the hook),
+`"endCard": { "durationInSeconds": 0 }` (loop ending), `"signs": [{ "text": "DAMAGE: 0%", "at": 1.6, "x": 560, "y": 640 }]`
+(cartoon signs that pop up), stat `"format": "mass"` (log-interpolated, "5.97 × 10²⁴ kg") with
+`"sublabelFormat": "clock"`, `"musicDrop": true`, and `"score": { "style": "upbeat" }`.
+The doubling math lives in `scripts/phone-math.mjs`.
+
+#### Voiceover
+
+Narration is synthesised locally with [Piper](https://github.com/rhasspy/piper) (`pip install piper-tts`).
+Voices are not committed; download them into `assets/voices/` (gitignored), e.g. from the Piper
+v0.0.2 GitHub release:
+
+```bash
+mkdir -p assets/voices && cd assets/voices
+curl -L https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-en-us-ryan-high.tar.gz | tar -xz
+curl -L https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-en-gb-alan-low.tar.gz | tar -xz
+```
+
+Every render writes the script with timings to `out/<id>-script.txt`. To use your own voice,
+record each line as `01.wav`, `02.wav` … (16-bit WAV, numbered by scene) into the episode's
+`voiceover.own` folder (`assets/vo/<id>/`); those replace the TTS and the scene lengths and caption
+timings follow your recordings automatically. A scene can use another voice with `"voModel"`.
 
 ### Writing a scene
 
@@ -194,7 +224,9 @@ Every render builds a soundtrack automatically. All of it is synthesised in code
   `horn` (duration, pitch), `alarm` (repeats), `rumble` (duration, build: a deep roar that builds),
   `sonicBoom` (size, gap: double crack + rattling tail), `whistle` (duration, pitch, pan, thud:
   falling debris; the hit is the thud), `creak` (duration, pitch), `splash` (size: big water impact),
-  `roomTone` (duration, fan), `fly` (duration, count, pitch: buzzing flies), `steps` (count, gap). `sneeze` also takes `big: true` for the opening frame.
+  `roomTone` (duration, fan), `fly` (duration, count, pitch: buzzing flies), `steps` (count, gap),
+  `rip`, `boing` (pitch), `crunch`, `ding` (pitch, big), `shatter` (panes, spread), `ricochet` (pitch),
+  `cannon`, `jingle` (news sting), `pop` (pitch). `sneeze` also takes `big: true` for the opening frame.
   Add `"align": "start"` to a cue to start the sound at `at` instead of lining up its hit.
   Adding a recipe is one function in `scripts/audio/sfx.mjs`.
 
@@ -250,5 +282,13 @@ estimates are marked **est.** In short:
 - Dust ~3.7 g/m² per year: **est.**, from ~10 mg/m²/day deposition (Canadian House Dust Study; German homes)
 - Damp cotton rots in ~6 weeks: soil-bed test, Beltwide Cotton Conferences (2011)
 - Plastic bottle ~450 years: **est.**, NOAA / Woods Hole outreach figure, not peer-reviewed (Chamas et al. 2020)
+
+## Episode 4 math
+
+`node scripts/phone-math.mjs` prints the table: m(t) = 0.2 kg × 2^(t/4), L(t) = 14.7 cm × 2^(t/12)
+(ρ = 2,500 kg/m³). Pocket (20 cm, shallowest men's front pocket, The Pudding 2018) at 5.4 s;
+fridge (~113 kg) / 55-inch TV width at 36.6 s; 10 storeys (30 m, ~3 m each, est.) at 1:32; Earth's
+mass at 5:39; black hole (ball of its volume inside its own Schwarzschild radius,
+M = √(3c⁶/32πρG³) = 1.71 × 10³⁸ kg ≈ 8.6 × 10⁷ solar masses) at 8:37.
 
 Map data: Natural Earth (public domain) via `world-atlas`. Fonts: Playfair Display and Inter (SIL OFL).

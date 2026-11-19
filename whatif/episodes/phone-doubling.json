@@ -1,0 +1,193 @@
+// Episode 4 — "What if your phone doubled in size every 4 seconds?"   (DOUBLING COMEDY format)
+// Bright daytime cartoon look ("theme": "bright"), voiceover-driven: every scene has a "vo" line,
+// synthesised locally with Piper TTS (or replaced by your own recordings — see out/phone-doubling-script.txt),
+// with word-by-word captions. Scene lengths follow the narration (no durationInSeconds needed).
+//
+// MATH — all numbers come from scripts/phone-math.mjs (run: node scripts/phone-math.mjs):
+//   mass m(t) = 0.2 kg × 2^(t/4); same shape and density as a normal phone (ρ = 2,500 kg/m³), so length
+//   L(t) = 14.7 cm × 2^(t/12). Readout per beat = m(t) at the beat's real time ("Real time" sub-line).
+//   Black hole when a ball of its volume fits inside its own Schwarzschild radius:
+//   M = √(3c⁶ / 32πρG³) = 1.71 × 10³⁸ kg (8.6 × 10⁷ solar masses) at t = 517.3 s (8 min 37 s).
+// No real brands, logos, people or channels: apps, news channel and army are made up / generic.
+{
+  "id": "phone-doubling",
+  "question": "What if your phone doubled in size every 4 seconds?",
+  "handle": "@simfinity",
+  "theme": "bright",
+  "accent": "#ffb000",
+  "hook": { "durationInSeconds": 0 },
+  "voiceover": { "model": "assets/voices/en-us-ryan-high.onnx", "lengthScale": 1.0, "volume": 1, "own": "assets/vo/phone-doubling" },
+
+  "scenes": [
+    {
+      // 1 HOOK — someone on a footpath, scrolling.
+      "component": "phone/Footpath",
+      "vo": "What if your phone doubled in size every four seconds?",
+      "voAt": 0.05,
+      "props": { "pulse": true },
+      "sfx": [{ "synth": "pop", "at": 0.0, "volume": 0.4, "params": { "pitch": 1.4 } }]
+    },
+    {
+      // 2 Close-up on the scale. 200 g = the starting mass (m(0) = 0.2 kg).
+      "component": "phone/ScaleCloseUp",
+      "vo": "Right now, it weighs about two hundred grams.",
+      "stat": { "label": "Phone mass", "format": "mass", "from": 0.2, "value": 0.2378, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 0, "sublabelValue": 1 },
+      "props": { "reading": "200 g" },
+      "sfx": [{ "synth": "pop", "at": 0.25, "volume": 0.5, "params": { "pitch": 0.8 } }]
+    },
+    {
+      // 3 Pocket. 20 cm = shallowest men's front jeans pocket in The Pudding's 2018 survey (7.9 in; women's
+      //   average ~48 % shorter) — https://pudding.cool/2018/08/pockets/ . L(t) = 20 cm at t = 5.4 s (est. pocket).
+      "component": "phone/PocketRip",
+      "vo": "After five seconds, it doesn't fit in your pocket.",
+      "stat": { "label": "Phone mass", "format": "mass", "from": 0.2378, "value": 0.5098, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 1, "sublabelValue": 5 },
+      "props": { "ripAt": 1.0 },
+      "signs": [{ "text": "POCKET: DESTROYED", "at": 1.1, "x": 120, "y": 640, "rotate": -5, "bg": "#ff6b6b", "fg": "#ffffff" }],
+      "sfx": [
+        { "synth": "rip", "at": 1.0, "volume": 0.8 },
+        { "synth": "pop", "at": 1.1, "volume": 0.4 }
+      ]
+    },
+    {
+      // 4 Charger. t = 20 s → 6.4 kg, 46 cm (shown a little bigger for the gag).
+      "component": "phone/ChargerFail",
+      "vo": "Charging it? Not happening.",
+      "stat": { "label": "Phone mass", "format": "mass", "from": 0.5098, "value": 6.4, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 5, "sublabelValue": 20 },
+      "props": { "length": 0.8 },
+      "signs": [{ "text": "CHARGING: FAILED", "at": 0.9, "x": 160, "y": 620, "rotate": 4, "bg": "#ffe14d" }],
+      "sfx": [
+        { "synth": "boing", "at": 0.6, "volume": 0.6 },
+        { "synth": "pop", "at": 0.9, "volume": 0.4 }
+      ]
+    },
+    {
+      // 5 TV size. Fridge ≈ 113 kg (typical full-size, ~250 lb); m(t) = 113 kg at t = 36.6 s, when it is
+      //   1.21 m long — the width of a 55-inch TV (~122 cm). Narration rounds to 37 seconds.
+      "component": "phone/TvScroll",
+      "vo": "At thirty-seven seconds, it's as heavy as a fridge.",
+      "stat": { "label": "Phone mass", "format": "mass", "from": 6.4, "value": 115.6, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 20, "sublabelValue": 37 },
+      "props": { "length": 1.22 },
+      "signs": [{ "text": "= 1 FRIDGE", "at": 1.6, "x": 110, "y": 700, "rotate": -6, "bg": "#ffffff" }],
+      "sfx": [{ "synth": "pop", "at": 1.6, "volume": 0.4 }]
+    },
+    {
+      // 6 Car pancake. Small car ≈ 1,000 kg; passed at t = 49 s. By t = 60 s the phone is 6.6 t and 4.7 m long.
+      "component": "phone/CarPancake",
+      "vo": "It tips over onto a small car… now a pancake.",
+      "stat": { "label": "Phone mass", "format": "mass", "from": 115.6, "value": 6554, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 37, "sublabelValue": 60 },
+      "props": { "fallAt": 0.35, "length": 4.7 },
+      "signs": [{ "text": "SCREEN: CRACKED (again)", "at": 1.25, "x": 90, "y": 620, "rotate": -4, "bg": "#ffe14d" }],
+      "sfx": [
+        { "synth": "whoosh", "at": 0.85, "volume": 0.4, "params": { "duration": 0.5, "reverse": true } },
+        { "synth": "crunch", "at": 0.9, "volume": 0.9 },
+        { "synth": "boing", "at": 1.05, "volume": 0.3, "params": { "pitch": 0.7 } }
+      ]
+    },
+    {
+      // 7 Notification. t = 75 s → 88 t, ~11 m tall.
+      "component": "phone/DingShatter",
+      "vo": "Then a notification comes in.",
+      "minSeconds": 3.0,
+      "stat": { "label": "Phone mass", "format": "mass", "from": 6554, "value": 88170, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 60, "sublabelValue": 75 },
+      "props": { "dingAt": 1.8, "length": 11 },
+      "signs": [{ "text": "VOLUME: 100%", "at": 2.0, "x": 520, "y": 620, "rotate": 5, "bg": "#ffe14d" }],
+      "sfx": [
+        { "synth": "ding", "at": 1.8, "volume": 0.9, "params": { "big": true } },
+        { "synth": "shatter", "at": 1.85, "volume": 0.7, "params": { "panes": 10, "spread": 0.9 } }
+      ]
+    },
+    {
+      // 8 Building. L(t) = 30 m at t = 92.1 s; ~3 m per storey (est.) → 10 storeys. Night, screen lights the city.
+      "component": "phone/NightTower",
+      "vo": "At ninety-two seconds, it's as tall as a ten-storey building.",
+      "stat": { "label": "Phone mass", "format": "mass", "from": 88170, "value": 1707000, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 75, "sublabelValue": 92 },
+      "props": { "length": 30 },
+      "signs": [{ "text": "10 STOREYS = 30 m", "at": 1.2, "x": 110, "y": 620, "rotate": -4, "bg": "#ffe14d" }],
+      "sfx": [{ "synth": "pop", "at": 1.2, "volume": 0.4 }]
+    },
+    {
+      // 9 Army (generic). t = 120 s → 2.1 × 10⁸ kg, 150 m tall.
+      "component": "phone/ArmyFire",
+      "vo": "The army opens fire. Not a scratch.",
+      "stat": { "label": "Phone mass", "format": "mass", "from": 1707000, "value": 214700000, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 92, "sublabelValue": 120 },
+      "props": { "length": 150 },
+      "signs": [{ "text": "DAMAGE: 0%", "at": 1.6, "x": 560, "y": 640, "rotate": 6, "bg": "#7ae582" }],
+      "sfx": [
+        { "synth": "cannon", "at": 0.25, "volume": 0.7 },
+        { "synth": "ricochet", "at": 0.6, "volume": 0.45 },
+        { "synth": "cannon", "at": 0.6, "volume": 0.55 },
+        { "synth": "ricochet", "at": 0.95, "volume": 0.4, "params": { "pitch": 1.2 } },
+        { "synth": "cannon", "at": 0.95, "volume": 0.6 },
+        { "synth": "ricochet", "at": 1.3, "volume": 0.4, "params": { "pitch": 0.9 } },
+        { "synth": "cannon", "at": 1.3, "volume": 0.5 },
+        { "synth": "ricochet", "at": 1.65, "volume": 0.4, "params": { "pitch": 1.1 } },
+        { "synth": "pop", "at": 1.6, "volume": 0.4 }
+      ]
+    },
+    {
+      // 10 News (made-up channel). t = 150 s → 3.9 × 10¹⁰ kg, ~850 m tall.
+      "component": "phone/NewsBulletin",
+      "vo": "The world panics.",
+      "minSeconds": 2.6,
+      "stat": { "label": "Phone mass", "format": "mass", "from": 214700000, "value": 38870000000, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 120, "sublabelValue": 150 },
+      "props": { "length": 850, "channel": "NEWS 9000", "ticker": "EVACUATE NOW • DO NOT ANSWER IT • " },
+      "sfx": [{ "synth": "jingle", "at": 0.0, "volume": 0.6, "align": "start" }]
+    },
+    {
+      // 11 The owner (a second Piper voice). t = 165 s → 5.2 × 10¹¹ kg, ~2 km.
+      "component": "phone/OwnerInterview",
+      "vo": "I only got it last week.",
+      "voModel": "assets/voices/en-gb-alan-low.onnx",
+      "minSeconds": 2.2,
+      "stat": { "label": "Phone mass", "format": "mass", "from": 38870000000, "value": 523000000000, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 150, "sublabelValue": 165 },
+      "props": { "length": 1500, "talkUntil": 1.8 }
+    },
+    {
+      // 12 Evacuation. t = 200 s → 2.3 × 10¹⁴ kg, ~15 km tall, on 1 % battery.
+      "component": "phone/HighwayJam",
+      "vo": "Everyone evacuates. And it's on one percent.",
+      "stat": { "label": "Phone mass", "format": "mass", "from": 523000000000, "value": 225200000000000, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 165, "sublabelValue": 200 },
+      "props": { "length": 15000 },
+      "sfx": [{ "synth": "alarm", "at": 0.6, "volume": 0.25, "params": { "repeats": 1, "freq": 1400 } }]
+    },
+    {
+      // 13 Earth. Earth mass 5.972 × 10²⁴ kg; m(t) passes it at t = 338.5 s (5 min 38.5 s → "thirty-nine").
+      //   Then it is 45,500 km long, 3.6× Earth's diameter (12,742 km).
+      "component": "phone/SpaceEarth",
+      "vo": "At five minutes, thirty-nine seconds, it's heavier than the Earth itself.",
+      "stat": { "label": "Phone mass", "format": "mass", "from": 225200000000000, "value": 5.972e24, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 200, "sublabelValue": 339 },
+      "signs": [
+        { "text": "EARTH", "at": 0.6, "x": 140, "y": 1010, "rotate": -3, "bg": "#ffffff", "size": 40 },
+        { "text": "YOUR PHONE (SOMEWHERE)", "at": 1.0, "x": 380, "y": 560, "rotate": 3, "bg": "#ffe14d", "size": 40 }
+      ],
+      "sfx": [{ "synth": "whoosh", "at": 0.4, "volume": 0.35, "params": { "duration": 1.4 } }]
+    },
+    {
+      // 14 Black hole. M = √(3c⁶ / 32πρG³) = 1.71 × 10³⁸ kg at t = 517.3 s (8 min 37 s); 8.6 × 10⁷ solar
+      //   masses (supermassive); Schwarzschild radius 2.5 × 10⁸ km.
+      "component": "phone/BlackHole",
+      "vo": "At eight minutes, thirty-seven seconds, gravity wins. It becomes a supermassive black hole.",
+      "tail": 1.1,
+      "musicDrop": true,
+      "stat": { "label": "Phone mass", "format": "mass", "from": 5.972e24, "value": 1.705e38, "sublabel": "Real time: {n}", "sublabelFormat": "clock", "sublabelFrom": 339, "sublabelValue": 517 },
+      "props": { "collapseAt": 1.2 },
+      "sfx": [
+        { "synth": "rumble", "at": 0.6, "volume": 0.7, "align": "start", "params": { "duration": 4.5, "build": 0.6 } },
+        { "synth": "boom", "at": 2.2, "volume": 0.4, "params": { "size": 1.0 } },
+        { "synth": "ding", "at": 5.95, "volume": 0.2, "params": { "pitch": 1.1 } }
+      ]
+    },
+    {
+      // 15 LOOP — back on the footpath with a normal phone. Hard cut back to the hook.
+      "component": "phone/Footpath",
+      "vo": "Anyway… you should probably put it down.",
+      "tail": 0.25
+    }
+  ],
+
+  // Loop ending: no end card, the last frame cuts straight back into the hook.
+  "endCard": { "durationInSeconds": 0 },
+  "music": { "file": "music.mp3", "volume": 0.08 },
+  "score": { "style": "upbeat", "volume": 0.2 },
+  "loudness": { "lufs": -14, "truePeak": -1 }
+}

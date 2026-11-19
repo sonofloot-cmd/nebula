@@ -426,6 +426,142 @@ export const steps = ({ count = 4, gap = 0.5, seed = 171 } = {}) => {
   return { buf: addReverb(toStereo(out), 0.15, { size: 0.5, damp: 0.7, tail: 0.5 }), hit: 0 };
 };
 
+/** Fabric rip: a fast run of filtered noise bursts. */
+export const rip = ({ duration = 0.6, seed = 181 } = {}) => {
+  const r = mulberry32(seed);
+  const out = mono(duration + 0.3);
+  for (let t = 0; t < duration; t += 0.006 + r() * 0.01) {
+    const n = noise(0.02, seed + Math.floor(t * 5000));
+    filter(n, "bandpass", 1800 + 2500 * (t / duration) + r() * 800, 1.2);
+    shape(n, adEnv(0.001, 0.006));
+    mix(out, n, t, 0.6 + 0.4 * Math.sin((Math.PI * t) / duration));
+  }
+  return { buf: addReverb(toStereo(out), 0.12, { size: 0.5, damp: 0.5, tail: 0.4 }), hit: 0 };
+};
+
+/** Cartoon boing: a springy, wobbling pitch. */
+export const boing = ({ pitch = 1, seed = 191 } = {}) => {
+  const out = mono(0.9);
+  const s = osc(0.8, (t) => (180 + 260 * Math.exp(-t * 6) * (1 + 0.25 * Math.sin(t * 60))) * pitch, "sine");
+  shape(s, adEnv(0.005, 0.25));
+  mix(out, s, 0, 1);
+  void seed;
+  return { buf: addReverb(toStereo(out), 0.15, { size: 0.5, damp: 0.5, tail: 0.4 }), hit: 0 };
+};
+
+/** Crunch: metal crumpling — a thud plus a crackle of short noise grains. */
+export const crunch = ({ seed = 201 } = {}) => {
+  const r = mulberry32(seed);
+  const out = mono(1.4);
+  const th = osc(0.5, (t) => 50 + 90 * Math.exp(-t * 20), "sine");
+  shape(th, adEnv(0.002, 0.12));
+  mix(out, th, 0, 1.1);
+  for (let t = 0; t < 0.7; t += 0.004 + r() * 0.02) {
+    const g = noise(0.03, seed + Math.floor(t * 9000));
+    filter(g, "bandpass", 400 + r() * 2500, 1.5);
+    shape(g, adEnv(0.001, 0.01));
+    mix(out, g, t, 0.8 * Math.exp(-t * 3.5));
+  }
+  return { buf: addReverb(toStereo(out), 0.2, { size: 0.6, damp: 0.5, tail: 0.6 }), hit: 0 };
+};
+
+/** Phone notification ding: bright two-partial bell. `big` adds a huge boomy body. */
+export const ding = ({ pitch = 1, big = false, seed = 211 } = {}) => {
+  const out = mono(big ? 3 : 1.4);
+  [[1568, 1], [2349, 0.5], [3136, 0.25]].forEach(([f, g]) => {
+    const s = osc(big ? 2.8 : 1.2, f * pitch * (big ? 0.5 : 1), "sine");
+    shape(s, adEnv(0.002, big ? 0.9 : 0.35));
+    mix(out, s, 0, g);
+  });
+  if (big) {
+    const sub = osc(2, (t) => 60 + 40 * Math.exp(-t * 4), "sine");
+    shape(sub, adEnv(0.003, 0.6));
+    mix(out, sub, 0, 1.2);
+    for (let i = 0; i < out.length; i++) out[i] = Math.tanh(out[i] * 1.8);
+  }
+  void seed;
+  return { buf: addReverb(toStereo(out), big ? 0.6 : 0.25, { size: big ? 0.92 : 0.6, damp: 0.3, tail: big ? 2.5 : 0.8 }), hit: 0 };
+};
+
+/** Glass shattering: sharp crash + tinkling shards, optionally a chain of panes down a street. */
+export const shatter = ({ panes = 1, spread = 0.8, seed = 221 } = {}) => {
+  const r = mulberry32(seed);
+  const out = stereo(1.6 + spread);
+  for (let p = 0; p < panes; p++) {
+    const at = (p / Math.max(1, panes)) * spread;
+    const pan = (r() - 0.5) * 1.6;
+    const g = 1 / Math.sqrt(panes) * (1 - (p / panes) * 0.5);
+    const crash = noise(0.3, seed + p);
+    filter(crash, "highpass", 2500, 0.8);
+    shape(crash, adEnv(0.001, 0.06));
+    mix(out, crash, at, g * 1.1, pan);
+    for (let k = 0; k < 14; k++) {
+      const f = 3500 + r() * 5000;
+      const tink = osc(0.15, f, "sine");
+      shape(tink, adEnv(0.001, 0.03 + r() * 0.04));
+      mix(out, tink, at + 0.05 + r() * 0.8, g * 0.25, pan + (r() - 0.5) * 0.4);
+    }
+  }
+  return { buf: addReverb(out, 0.25, { size: 0.7, damp: 0.3, tail: 1 }), hit: 0 };
+};
+
+/** Bullet/shell ricochet: "pyeew" — a fast falling whistle with a click. */
+export const ricochet = ({ pitch = 1, seed = 231 } = {}) => {
+  const out = mono(0.8);
+  const c = noise(0.02, seed);
+  filter(c, "highpass", 3000, 0.7);
+  shape(c, adEnv(0.001, 0.004));
+  mix(out, c, 0, 0.8);
+  const s = osc(0.6, (t) => (3400 - 2600 * Math.min(1, t / 0.5)) * pitch, "sine");
+  shape(s, (t) => Math.min(1, t / 0.01) * Math.exp(-t * 5));
+  mix(out, s, 0.01, 0.5);
+  return { buf: addReverb(toStereo(out), 0.3, { size: 0.7, damp: 0.4, tail: 0.8 }), hit: 0 };
+};
+
+/** Tank cannon: punchy boom + crack. */
+export const cannon = ({ seed = 241 } = {}) => {
+  const out = mono(1.8);
+  const sub = osc(1.2, (t) => 45 + 90 * Math.exp(-t * 12), "sine");
+  shape(sub, adEnv(0.002, 0.25));
+  mix(out, sub, 0, 1.2);
+  const n = noise(1.2, seed);
+  filter(n, "lowpass", (t) => 200 + 5000 * Math.exp(-t * 14), 0.8);
+  shape(n, adEnv(0.001, 0.2));
+  mix(out, n, 0, 1.0);
+  for (let i = 0; i < out.length; i++) out[i] = Math.tanh(out[i] * 1.5);
+  return { buf: addReverb(toStereo(out), 0.4, { size: 0.85, damp: 0.5, tail: 1.4 }), hit: 0 };
+};
+
+/** News jingle: bright brassy "ta-da-DAAA" stab. */
+export const jingle = ({ seed = 251 } = {}) => {
+  const out = mono(2.2);
+  const hits = [[0, [64, 67, 72], 0.14], [0.16, [65, 69, 74], 0.14], [0.34, [67, 72, 76, 79], 1.2]];
+  hits.forEach(([at, notes, dur]) =>
+    notes.forEach((n) => {
+      const s = osc(dur + 0.3, midiHzLocal(n), "saw");
+      filter(s, "lowpass", 2600, 0.8);
+      shape(s, (t) => Math.min(1, t / 0.01) * (t < dur ? 1 : Math.exp(-(t - dur) * 12)) * 0.5);
+      mix(out, s, at, 0.35);
+    }),
+  );
+  const tim = noise(0.4, seed);
+  filter(tim, "highpass", 6000, 0.7);
+  shape(tim, adEnv(0.002, 0.15));
+  mix(out, tim, 0.34, 0.4);
+  return { buf: addReverb(toStereo(out), 0.3, { size: 0.8, damp: 0.4, tail: 1.2 }), hit: 0 };
+};
+const midiHzLocal = (m) => 440 * Math.pow(2, (m - 69) / 12);
+
+/** Little UI pop for signs appearing. */
+export const pop = ({ pitch = 1, seed = 261 } = {}) => {
+  const out = mono(0.3);
+  const s = osc(0.15, (t) => (500 + 900 * Math.exp(-t * 40)) * pitch, "sine");
+  shape(s, adEnv(0.002, 0.04));
+  mix(out, s, 0, 1);
+  void seed;
+  return { buf: toStereo(out), hit: 0 };
+};
+
 /** Short metallic groan / creak (the station starting to tilt). */
 export const creak = ({ duration = 1.2, pitch = 1, seed = 131 } = {}) => {
   const out = mono(duration + 0.2);
@@ -438,4 +574,4 @@ export const creak = ({ duration = 1.2, pitch = 1, seed = 131 } = {}) => {
   return { buf: addReverb(toStereo(out), 0.5, { size: 0.9, damp: 0.3, tail: 1.8 }), hit: 0 };
 };
 
-export const RECIPES = { sneeze, crowdSneeze, babble, street, train, boom, whoosh, wind, thump, horn, alarm, rumble, sonicBoom, whistle, creak, splash, roomTone, fly, steps };
+export const RECIPES = { sneeze, crowdSneeze, babble, street, train, boom, whoosh, wind, thump, horn, alarm, rumble, sonicBoom, whistle, creak, splash, roomTone, fly, steps, rip, boing, crunch, ding, shatter, ricochet, cannon, jingle, pop };

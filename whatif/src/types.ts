@@ -24,7 +24,7 @@ export interface CameraMove {
   ease?: "inOut" | "out" | "linear";
 }
 
-export type StatFormat = "number" | "countdown" | "elapsed";
+export type StatFormat = "number" | "countdown" | "elapsed" | "mass";
 
 export interface Stat {
   /** Small uppercase label above the number, e.g. "SNEEZES". */
@@ -45,6 +45,8 @@ export interface Stat {
   sublabelValue?: number;
   sublabelFrom?: number;
   sublabelDecimals?: number;
+  /** "clock": the sub-label number is seconds, shown as m:ss. */
+  sublabelFormat?: "number" | "clock";
   decimals?: number;
   prefix?: string;
   suffix?: string;
@@ -68,14 +70,22 @@ export interface SceneDef {
   /** Path of the scene component under src/scenes without ".scene.tsx", e.g. "sneeze/SneezeCloseUp". */
   component: string;
   durationInSeconds: number;
-  /** One stat, or several stages shown on the same shot (e.g. SNEEZES → DROPLETS). */
-  stat: Stat | Stat[];
+  /** One stat, or several stages shown on the same shot (e.g. SNEEZES → DROPLETS). Omit for none. */
+  stat?: Stat | Stat[] | false;
+  /** Narration line for this scene (voiceover episodes); drives word-by-word captions. */
+  vo?: string;
+  /** Seconds into the scene when the narration starts (default 0.15). */
+  voAt?: number;
+  /** Comedy signs that pop up: { text, at (s), x, y (px, top-left of frame), rotate, bg, fg, size }. */
+  signs?: Array<{ text: string; at: number; x?: number; y?: number; rotate?: number; bg?: string; fg?: string; size?: number }>;
+  /** Music drops to a low drone for this scene (upbeat score). */
+  musicDrop?: boolean;
   /**
    * One short punchy line, max 10 words. Or a timed sequence of lines:
    * [{ "text": "It's happened before…", "at": 0 }, { "text": "…just not where you'd think.", "at": 1.1 }]
    * (`at` = seconds into the scene; each line shows until the next one).
    */
-  caption: string | CaptionCue[];
+  caption?: string | CaptionCue[];
   /** Override the scene's default camera move (merged over the default). */
   camera?: Partial<CameraMove>;
   /** Marks the twist scene: red accent + countdown styling. */
@@ -98,6 +108,10 @@ export interface SceneDef {
 
 export interface Episode {
   id: string;
+  /** "dark" (default) or "bright": daytime cartoon look (stat card, lighter grade, light flash cuts). */
+  theme?: "dark" | "bright";
+  /** Voiceover narration (see scripts/audio/voiceover.mjs). */
+  voiceover?: { model?: string; lengthScale?: number; volume?: number; own?: string };
   /** The "What if…?" question. */
   question: string;
   handle?: string;
@@ -127,8 +141,16 @@ export interface AudioCue {
   loop?: boolean;
 }
 
+export interface WordTiming {
+  w: string;
+  start: number;
+  end: number;
+}
+
 export interface EpisodeProps extends Record<string, unknown> {
   episode: Episode;
+  /** Word timings per scene index (seconds from scene start), built by scripts/audio/voiceover.mjs. */
+  voWords?: Record<number, WordTiming[]>;
   /** Built by the render script (scripts/audio): score, music and sound effects. */
   audio?: AudioCue[];
 }
