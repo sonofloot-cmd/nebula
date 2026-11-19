@@ -59,6 +59,8 @@ export interface SceneDef {
   twist?: boolean;
   /** Free-form props passed to the scene component. */
   props?: Record<string, unknown>;
+  /** Sound effects: a synth recipe (see scripts/audio/sfx.mjs) or an audio file in /assets. */
+  sfx?: Array<{ synth?: string; file?: string; at?: number; volume?: number; params?: Record<string, unknown> }>;
 }
 
 export interface Episode {
@@ -76,12 +78,23 @@ export interface Episode {
     cta?: string;
   };
   music?: { file?: string; volume?: number };
+  /** Auto-composed score settings, or false for no score. */
+  score?: false | { key?: string; volume?: number };
+}
+
+/** A sound placed on the timeline (built by scripts/audio). */
+export interface AudioCue {
+  file: string;
+  from: number;
+  volume: number;
+  music?: boolean;
+  loop?: boolean;
 }
 
 export interface EpisodeProps extends Record<string, unknown> {
   episode: Episode;
-  /** Set by the render script when the music file exists in /assets. */
-  musicAvailable?: boolean;
+  /** Built by the render script (scripts/audio): score, music and sound effects. */
+  audio?: AudioCue[];
 }
 
 export interface SceneComponentProps {

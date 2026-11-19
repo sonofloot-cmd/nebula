@@ -13,6 +13,7 @@ npm run test-clip -- episodes/sneeze.json --from=30   # 5 s starting at 0:30
 npm run render -- episodes/sneeze.json --still=0,12,40   # JPEG stills, quick look checks
 npm run render -- episodes/sneeze.json --check    # validate the script only
 npm run studio -- episodes/sneeze.json            # live preview in Remotion Studio
+npm run audio -- episodes/sneeze.json             # build just the soundtrack files
 ```
 
 Rendering uses software WebGL (`swangle`), so it works on servers with no GPU. A 52 s episode
@@ -28,7 +29,7 @@ takes about 5 minutes on 4 CPU cores. On first run Remotion downloads a headless
 | Twist | near the end | `"twist": true`, a red TWIST tag, and a countdown timer in the stat block |
 | End card | 3 s | The question again, "PART 2: …" and "FOLLOW FOR MORE WHAT IFS" |
 
-Also on every video: a watermark at the bottom right (`"handle"`) and an optional music bed.
+Also on every video: a watermark at the bottom right (`"handle"`) and a synthesised soundtrack (score and sound effects; see [Sound](#sound)).
 
 ## Making a new episode
 
@@ -47,7 +48,7 @@ Also on every video: a watermark at the bottom right (`"handle"`) and an optiona
 {
   "id": "volcano",                       // output → out/volcano.mp4
   "question": "What if … ?",             // must start with "What if"
-  "handle": "@myhandle",                 // watermark
+  "handle": "@simfinity",                // watermark
   "accent": "#7fe3ff",                   // label / highlight colour
   "hook": { "durationInSeconds": 3 },
   "scenes": [
@@ -134,11 +135,36 @@ Safe areas: the stat block sits 150 px from the top and the caption 430 px from 
 keeps both clear of the TikTok/Reels UI (the top tabs, the right-hand button rail and the bottom
 description).
 
-## Music
+## Sound
 
-Drop a track at `assets/music.mp3`. It loops, plays at `music.volume` (0.12 by default) and fades
-in and out. If the file is missing, the video renders silent. Use music you have the rights to,
-or a track from the platform's library added at upload.
+Every render builds a soundtrack automatically. All of it is synthesised in code
+(`scripts/audio/`), so it is original, royalty-free, timed to the frame and deterministic.
+
+- **Score.** Auto-composed from the episode's timeline at 120 BPM, so 6 s scenes are exactly
+  3 bars. Each escalating scene adds a layer: pad and arpeggio, then the bass pulse, kick,
+  snare and hats, then tom fills. Every cut gets a riser and an impact. The twist scene drops
+  to a muffled heartbeat with a drone, and the end card resolves. Settings:
+  `"score": { "key": "A minor", "volume": 0.55 }`, or `"score": false` to turn it off.
+- **Your own music.** Put a track at `assets/music.mp3` (or set `"music": { "file": … }`). It
+  replaces the score, loops, and plays low (`music.volume`, default 0.12) with fades. Use music
+  you have the rights to.
+- **Sound effects.** List them per scene. `at` is seconds into the scene, and the effect's hit
+  point (the "CHOO" of a sneeze, the impact of a boom) lands exactly on it:
+
+  ```jsonc
+  "sfx": [
+    { "synth": "sneeze", "at": 0, "volume": 1, "params": { "pitch": 0.9 } },
+    { "file": "my-sounds/splash.mp3", "at": 2.5, "volume": 0.8 }   // or any file in /assets
+  ]
+  ```
+
+  Synth recipes: `sneeze`, `crowdSneeze` (count, spread, distance, murmur), `babble`, `street`,
+  `train`, `boom` (size), `whoosh` (duration, reverse), `wind` (duration, airy), `thump`.
+  Adding a recipe is one function in `scripts/audio/sfx.mjs`.
+
+Generated audio is cached in `assets/generated/<id>/`, and only changed cues are re-synthesised.
+`npm run audio -- episodes/<id>.json` builds the audio alone if you want to listen to the files.
+To render without sound, add `--mute`.
 
 ## Episode 1 sources
 

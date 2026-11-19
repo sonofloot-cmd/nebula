@@ -4,12 +4,13 @@
 //   npm run render -- episodes/sneeze.json --test     -> out/sneeze-test.mp4 (first 5 s)
 //   npm run render -- episodes/sneeze.json --test --from=20   (5 s starting at 0:20)
 //   npm run render -- episodes/sneeze.json --still=12.5       -> out/sneeze-12.5s.jpg  (or --still=2,12.5,40)
-// Options: --out=path  --concurrency=N  --check (validate only)
+// Options: --out=path  --concurrency=N  --check (validate only)  --mute (no audio)
 import { bundle } from "@remotion/bundler";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { generateAudio, validateAudio } from "./audio/index.mjs";
 import { loadEpisode, validateEpisode } from "./episode.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -28,6 +29,7 @@ if (!file) {
 const episodePath = path.resolve(process.cwd(), file);
 const episode = loadEpisode(episodePath);
 const { errors, warnings, total } = validateEpisode(episode, path.join(root, "src/scenes"));
+errors.push(...validateAudio(episode));
 warnings.forEach((w) => console.warn(`⚠  ${w}`));
 if (errors.length) {
   errors.forEach((e) => console.error(`✖  ${e}`));
@@ -36,10 +38,15 @@ if (errors.length) {
 console.log(`Episode "${episode.id}" — ${episode.scenes.length} scenes, ${total}s`);
 if (flag("check")) process.exit(0);
 
-const musicFile = episode.music?.file ?? "music.mp3";
-const musicAvailable = fs.existsSync(path.join(root, "assets", musicFile));
-console.log(musicAvailable ? `♪  Music: assets/${musicFile}` : `♪  No assets/${musicFile} — rendering without music`);
-const inputProps = { episode, musicAvailable };
+// Soundtrack: auto score (or your assets/music.mp3) + synthesised SFX, cached in assets/generated/.
+const audio = flag("mute") ? [] : generateAudio(episode, root);
+for (const cue of audio) {
+  if (!fs.existsSync(path.join(root, "assets", cue.file))) {
+    console.error(`✖  Missing audio file assets/${cue.file}`);
+    process.exit(1);
+  }
+}
+const inputProps = { episode, audio };
 
 // Browser: REMOTION_BROWSER env, else a pre-installed headless shell if present, else Remotion downloads one.
 const candidates = [

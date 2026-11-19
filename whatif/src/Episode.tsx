@@ -20,11 +20,10 @@ const MissingScene: React.FC<{ name: string }> = ({ name }) => (
   </AbsoluteFill>
 );
 
-export const Episode: React.FC<EpisodeProps> = ({ episode, musicAvailable }) => {
+export const Episode: React.FC<EpisodeProps> = ({ episode, audio }) => {
   const { fps, durationInFrames } = useVideoConfig();
   const tl = buildTimeline(episode);
   const accent = episode.accent ?? "#7fe3ff";
-  const musicVolume = episode.music?.volume ?? 0.12;
 
   return (
     <AbsoluteFill style={{ background: "#05060b" }}>
@@ -62,21 +61,25 @@ export const Episode: React.FC<EpisodeProps> = ({ episode, musicAvailable }) => 
         />
       </Sequence>
 
-      <Watermark handle={episode.handle ?? "@myhandle"} />
+      <Watermark handle={episode.handle ?? "@simfinity"} />
 
-      {musicAvailable ? (
-        <Audio
-          src={staticFile(episode.music?.file ?? "music.mp3")}
-          loop
-          volume={(f) =>
-            musicVolume *
-            interpolate(f, [0, fps * 0.5, durationInFrames - fps * 1.5, durationInFrames], [0, 1, 1, 0], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            })
-          }
-        />
-      ) : null}
+      {(audio ?? []).map((cue, i) => (
+        <Sequence key={`a${i}`} from={cue.from} name={`♪ ${cue.file}`} layout="none">
+          <Audio
+            src={staticFile(cue.file)}
+            loop={cue.loop}
+            volume={(f) =>
+              cue.volume *
+              (cue.music
+                ? interpolate(f, [0, 8, durationInFrames - fps * 1.2, durationInFrames], [0, 1, 1, 0], {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                  })
+                : 1)
+            }
+          />
+        </Sequence>
+      ))}
     </AbsoluteFill>
   );
 };

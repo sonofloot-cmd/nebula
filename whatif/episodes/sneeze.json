@@ -5,7 +5,7 @@
 {
   "id": "sneeze",
   "question": "What if every human on Earth sneezed at the same time?",
-  "handle": "@myhandle",
+  "handle": "@simfinity",
   "accent": "#7fe3ff",
   "hook": { "durationInSeconds": 3 },
 
@@ -21,7 +21,9 @@
       //   It is an UPPER figure ("as many as"), hence "up to". Counts in other studies vary widely.
       "stat": { "label": "Droplets", "value": 40000, "sublabel": "from a single sneeze (up to)" },
       "caption": "One sneeze fires up to 40,000 droplets.",
-      "camera": { "type": "pushIn" }
+      "camera": { "type": "pushIn" },
+      // Sound: the "CHOO" lands on frame 0.
+      "sfx": [{ "synth": "sneeze", "at": 0, "volume": 1 }]
     },
     {
       // ROOM — a metro carriage.
@@ -34,7 +36,11 @@
       //   It is how far the cloud spreads, not a measured infection distance.
       "stat": { "label": "Cloud reach", "value": 8, "decimals": 1, "suffix": " m", "sublabel": "one sneeze's gas cloud (MIT study, 2020)" },
       "caption": "The cloud can drift 8 metres down the carriage.",
-      "props": { "reachMetres": 8 }
+      "props": { "reachMetres": 8 },
+      "sfx": [
+        { "synth": "train", "at": 0, "volume": 0.45, "params": { "duration": 6 } },
+        { "synth": "sneeze", "at": 0.1, "volume": 0.85, "params": { "pitch": 0.85, "roomWet": 0.25 } }
+      ]
     },
     {
       // STREET — a scramble crossing (modelled on Shibuya, Tokyo).
@@ -46,7 +52,11 @@
       // 100,000,000 = 2,500 × 40,000 (droplets per sneeze, upper figure — see scene 1). Derived.
       "stat": { "label": "Droplets", "value": 100000000, "sublabel": "2,500 people × 40,000 droplets" },
       "caption": "2,500 people. 100 million droplets. One green light.",
-      "props": { "people": 2500 }
+      "props": { "people": 2500 },
+      "sfx": [
+        { "synth": "street", "at": 0, "volume": 0.4, "params": { "duration": 6 } },
+        { "synth": "crowdSneeze", "at": 1.0, "volume": 0.9, "params": { "count": 70, "spread": 0.2 } }
+      ]
     },
     {
       // CITY — the world's biggest city.
@@ -59,7 +69,11 @@
       //   rankings (Tokyo ~37M) used a different method.
       "stat": { "label": "Sneezes", "value": 41900000, "sublabel": "Greater Jakarta, the world's largest city" },
       "caption": "Jakarta: 42 million sneezes in the same second.",
-      "camera": { "type": "orbit" }
+      "camera": { "type": "orbit" },
+      "sfx": [
+        { "synth": "crowdSneeze", "at": 0.6, "volume": 0.8, "params": { "count": 140, "spread": 0.4, "distance": 0.6, "murmur": false } },
+        { "synth": "wind", "at": 1.0, "volume": 0.4, "params": { "duration": 5 } }
+      ]
     },
     {
       // COUNTRY — sound: India lights up with sound rings.
@@ -73,7 +87,11 @@
       //   https://www.bottomlineinc.com/health/how-to-sneeze-quietly
       "stat": { "label": "Sneezes", "value": 1476000000, "sublabel": "India · a loud sneeze is ~90 dB (approx.)" },
       "caption": "India sneezes: a 90-decibel roar, everywhere at once.",
-      "props": { "countryId": "356", "centre": [80, 22], "span": 18 }
+      "props": { "countryId": "356", "centre": [80, 22], "span": 18 },
+      "sfx": [
+        { "synth": "boom", "at": 0.7, "volume": 0.8 },
+        { "synth": "boom", "at": 1.6, "volume": 0.45, "params": { "size": 0.6 } }
+      ]
     },
     {
       // PLANET — everybody.
@@ -84,7 +102,11 @@
       //   https://www.worldometers.info/world-population/
       "stat": { "label": "Sneezes", "value": 8300000000, "sublabel": "every human on Earth" },
       "caption": "8.3 billion sneezes. Every continent. One single second.",
-      "props": { "faceLon": 45, "faceLat": 20 }
+      "props": { "faceLon": 45, "faceLat": 20 },
+      "sfx": [
+        { "synth": "whoosh", "at": 0.8, "volume": 0.5, "params": { "reverse": true, "duration": 0.7 } },
+        { "synth": "boom", "at": 0.8, "volume": 0.9, "params": { "size": 1.5 } }
+      ]
     },
     {
       // ATMOSPHERE — the total droplet count.
@@ -94,7 +116,8 @@
       //   Derived from the two sourced numbers above; an upper-bound ESTIMATE.
       "stat": { "label": "Droplets", "value": 332000000000000, "sublabel": "8.3 billion × 40,000 (upper estimate)" },
       "caption": "332 trillion droplets launched into the air at once.",
-      "props": { "faceLon": 100 }
+      "props": { "faceLon": 100 },
+      "sfx": [{ "synth": "wind", "at": 0, "volume": 0.55, "params": { "duration": 6, "airy": true } }]
     },
     {
       // TWIST — everyone's eyes shut at the same moment.
@@ -118,7 +141,11 @@
         "sublabel": "slow motion · up to 20,000 planes still flying"
       },
       "caption": "Twist: almost every eye on Earth shuts at once.",
-      "props": { "planes": 1500, "closeAt": 0.9, "faceLon": 15 }
+      "props": { "planes": 1500, "closeAt": 0.9, "faceLon": 15 },
+      "sfx": [
+        { "synth": "thump", "at": 1.0, "volume": 0.9 },
+        { "synth": "whoosh", "at": 6.4, "volume": 0.5, "params": { "reverse": true, "duration": 0.9 } }
+      ]
     }
   ],
 
@@ -128,6 +155,8 @@
     "cta": "FOLLOW FOR MORE WHAT IFS"
   },
 
-  // Optional: drop a track at assets/music.mp3 (or set "file"). Volume 0–1, kept low under the visuals.
-  "music": { "file": "music.mp3", "volume": 0.12 }
+  // Optional: drop your own track at assets/music.mp3 (or set "file"); it replaces the
+  // auto-composed score and is mixed low. Without it, the score below is generated.
+  "music": { "file": "music.mp3", "volume": 0.12 },
+  "score": { "key": "A minor", "volume": 0.55 }
 }
