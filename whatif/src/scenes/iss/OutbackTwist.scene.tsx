@@ -81,7 +81,9 @@ const Shopfront: React.FC<{ s: Shop }> = ({ s }) => {
         <planeGeometry args={[1.2, 2.3]} />
         <meshBasicMaterial color="#3a2416" />
       </mesh>
-      <Glow position={[0, 1.8, 7]} size={s.w * 0.9} color="#ffb04a" opacity={0.28} />
+      <Glow position={[0, 1.8, 7]} size={s.w * 0.9} color="#ffb04a" opacity={0.36} />
+      {/* warm verandah light spilling onto the street */}
+      <pointLight position={[0, 3, 9]} intensity={2.6} distance={24} decay={1.1} color="#ffb060" />
       <TextPanel card={sign} height={0.95} position={[0, 3.95, 9.66]} rotation={[0, 0, 0]} brightness={0.9} />
     </group>
   );
@@ -215,7 +217,8 @@ const OutbackTwist: React.FC<SceneComponentProps> = ({ durationInFrames, props }
       const s = frame / fps;
       if (s < cutAt) {
         const p = s / cutAt;
-        return { pos: [0, 1.7, 32] as Vec3, target: [8, 40 - 10 * p, -60] as Vec3, fov: 55 };
+        // close and warm on the shopfronts (never a near-black frame), easing in slowly
+        return { pos: [-23 + 2.5 * p, 2.8 - 0.2 * p, 15 - 2.5 * p] as Vec3, target: [-15 + 1.5 * p, 5.0, -14] as Vec3, fov: 50 };
       }
       const p = Math.min(1, (s - cutAt) / (durationInFrames / fps - cutAt));
       const e = 1 - Math.pow(1 - p, 2);
@@ -240,17 +243,18 @@ const OutbackTwist: React.FC<SceneComponentProps> = ({ durationInFrames, props }
         cameraAt={cameraAt}
         background="#03040c"
         fog={["#0c0d1c", 160, 1400]}
-        sky="#8aa0d8"
-        ground="#2a1208"
+        sky="#d9b48c"
+        ground="#3a1a0c"
         sunPosition={[-40, 60, 30]}
-        sunIntensity={0.55}
+        sunIntensity={0.9}
       >
         <SkyDome
           radius={900}
           stops={[
             [-1, "#1a0d08"],
-            [0, "#2a1c2a"],
-            [0.06, "#141a36"],
+            [0, "#6a3422"],
+            [0.05, "#2e2440"],
+            [0.12, "#161c3a"],
             [0.35, "#070a1e"],
             [1, "#02030a"],
           ]}

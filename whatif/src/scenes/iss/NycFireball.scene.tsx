@@ -8,6 +8,7 @@ import { ParticleFn, Particles } from "../../three/Particles";
 import { mulberry32, smoothstep } from "../../three/random";
 import { SceneCanvas } from "../../three/SceneCanvas";
 import { TextCard, TextPanel } from "../../three/text";
+import { FACADE, Tower, TowerMesh } from "../../three/city";
 import type { SceneComponentProps } from "../../types";
 
 /**
@@ -16,44 +17,6 @@ import type { SceneComponentProps } from "../../types";
  * as a fireball that splits into fragments. Sonic boom → flash + camera shake. World units = metres.
  * props: { boomAt?: number (s), splitAt?: number (s) }
  */
-
-let windowTex: THREE.CanvasTexture | null = null;
-const getWindowTexture = () => {
-  if (windowTex) return windowTex;
-  const c = document.createElement("canvas");
-  c.width = 256;
-  c.height = 512;
-  const ctx = c.getContext("2d")!;
-  ctx.fillStyle = "#000000";
-  ctx.fillRect(0, 0, 256, 512);
-  const r = mulberry32(99);
-  const cols = 8;
-  const rows = 16;
-  for (let y = 0; y < rows; y++)
-    for (let x = 0; x < cols; x++) {
-      const v = r();
-      if (v < 0.42) continue;
-      ctx.fillStyle = v > 0.93 ? "#9fd0ff" : v > 0.7 ? "#ffe0a0" : "#c98b3c";
-      ctx.globalAlpha = 0.45 + r() * 0.55;
-      ctx.fillRect(x * 32 + 7, y * 32 + 8, 18, 18);
-    }
-  ctx.globalAlpha = 1;
-  windowTex = new THREE.CanvasTexture(c);
-  windowTex.colorSpace = THREE.SRGBColorSpace;
-  windowTex.wrapS = windowTex.wrapT = THREE.RepeatWrapping;
-  return windowTex;
-};
-
-interface Tower {
-  x: number;
-  z: number;
-  w: number;
-  d: number;
-  h: number;
-  color: string;
-}
-
-const FACADE = ["#1a2133", "#202a3d", "#151b2a", "#262f44", "#1c2436"];
 
 const makeTowers = (): Tower[] => {
   const r = mulberry32(5);
@@ -73,20 +36,6 @@ const makeTowers = (): Tower[] => {
   return out;
 };
 
-const TowerMesh: React.FC<{ s: Tower; lit: number }> = ({ s, lit }) => {
-  const tex = useMemo(() => {
-    const t = getWindowTexture().clone();
-    t.needsUpdate = true;
-    t.repeat.set(Math.max(1, Math.round(s.w / 30)), Math.max(1, Math.round(s.h / 60)));
-    return t;
-  }, [s]);
-  return (
-    <mesh position={[s.x, s.h / 2, s.z]}>
-      <boxGeometry args={[s.w, s.h, s.d]} />
-      <meshStandardMaterial color={s.color} roughness={0.85} emissive="#ffffff" emissiveMap={tex} emissiveIntensity={lit} />
-    </mesh>
-  );
-};
 
 /** Made-up billboard copy. No real brands. */
 const BOARDS: Array<{ card: TextCard; x: number; y: number; h: number; z?: number }> = [
@@ -107,8 +56,8 @@ const NycFireball: React.FC<SceneComponentProps> = ({ durationInFrames, camera, 
   const towers = useMemo(() => makeTowers(), []);
 
   // Fireball path across the sky (upper right → left), metres.
-  const S = useMemo(() => new THREE.Vector3(560, 1020, -480), []);
-  const E = useMemo(() => new THREE.Vector3(-560, 560, -700), []);
+  const S = useMemo(() => new THREE.Vector3(560, 790, -480), []);
+  const E = useMemo(() => new THREE.Vector3(-560, 430, -700), []);
   const along = (time: number) => S.clone().lerp(E, time / 5.8);
   const head = along(t);
   const dir = E.clone().sub(S).normalize();
@@ -247,6 +196,14 @@ const NycFireball: React.FC<SceneComponentProps> = ({ durationInFrames, camera, 
           <pointLight position={[head.x * 0.4, 400, 100]} intensity={0.7 + 3 * flash} distance={1400} decay={0.5} color="#ffb070" />
         </SceneCanvas>
       </AbsoluteFill>
+      {/* keep the stat block readable over the fireball's sky glow */}
+      <AbsoluteFill
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(2,3,10,0.78) 0%, rgba(2,3,10,0.6) 14%, rgba(2,3,10,0.25) 24%, rgba(2,3,10,0) 32%)",
+          pointerEvents: "none",
+        }}
+      />
       {/* boom flash */}
       <AbsoluteFill style={{ background: "#ffcf9a", opacity: 0.35 * Math.max(0, 1 - Math.abs(t - boomAt) / 0.12), mixBlendMode: "screen" }} />
     </AbsoluteFill>

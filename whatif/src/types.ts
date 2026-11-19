@@ -101,6 +101,8 @@ export interface Episode {
   music?: { file?: string; volume?: number };
   /** Auto-composed score settings, or false for no score. */
   score?: false | { key?: string; volume?: number };
+  /** Loudness-normalise the final MP4 (two-pass ffmpeg loudnorm), e.g. { "lufs": -14, "truePeak": -1 }. */
+  loudness?: { lufs?: number; truePeak?: number };
 }
 
 /** A sound placed on the timeline (built by scripts/audio). */

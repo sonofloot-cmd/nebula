@@ -8,6 +8,7 @@
 //          --preview  (whole episode at half resolution → out/<id>-preview.mp4)
 import { bundle } from "@remotion/bundler";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -119,3 +120,42 @@ await renderMedia({
   },
 });
 console.log(`✔  ${path.relative(process.cwd(), output)}  (${((Date.now() - started) / 1000).toFixed(0)}s)`);
+
+// ---- loudness normalisation (episode "loudness": { "lufs": -14, "truePeak": -1 }) ----
+// Two-pass ffmpeg loudnorm on the audio track; video is stream-copied. AAC can overshoot the
+// true-peak target slightly, so the result is re-measured and, if needed, redone with a lower ceiling.
+if (episode.loudness && !flag("mute")) {
+  const ff = process.env.FFMPEG ?? "ffmpeg";
+  const I = episode.loudness.lufs ?? -14;
+  const TP = episode.loudness.truePeak ?? -1;
+  const run = (args) => spawnSync(ff, args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const measure = (file, tp) => {
+    const res = run(["-hide_banner", "-i", file, "-vn", "-af", `loudnorm=I=${I}:TP=${tp}:LRA=11:print_format=json`, "-f", "null", "-"]);
+    const m = res.stderr.match(/\{[\s\S]*?\}\s*$/);
+    if (!m) throw new Error(`loudnorm measure failed: ${res.stderr.slice(-400)}`);
+    return JSON.parse(m[0]);
+  };
+  if (run(["-version"]).status !== 0) {
+    console.warn("⚠  ffmpeg not found; skipping loudness normalisation (set FFMPEG=/path/to/ffmpeg)");
+  } else {
+    const src = output.replace(/\.mp4$/, ".prenorm.mp4");
+    fs.renameSync(output, src);
+    let ceiling = TP;
+    let tgtI = I;
+    let final;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const m = measure(src, ceiling);
+      const filter = `loudnorm=I=${tgtI}:TP=${ceiling}:LRA=11:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true`;
+      const res = run(["-hide_banner", "-y", "-i", src, "-map", "0:v", "-map", "0:a", "-c:v", "copy", "-af", filter, "-ar", "48000", "-c:a", "aac", "-b:a", "256k", "-movflags", "+faststart", output]);
+      if (res.status !== 0) throw new Error(`loudnorm apply failed: ${res.stderr.slice(-400)}`);
+      final = measure(output, TP);
+      const errI = I - Number(final.input_i);
+      const okTP = Number(final.input_tp) <= TP;
+      if (okTP && Math.abs(errI) <= 0.2) break;
+      if (Math.abs(errI) > 0.2) tgtI = Math.round((tgtI + errI) * 100) / 100; // nudge the target by the miss
+      if (!okTP) ceiling = Math.round((ceiling - 0.5) * 10) / 10; // AAC overshoot: lower the ceiling
+    }
+    fs.rmSync(src);
+    console.log(`✔  loudness: ${final.input_i} LUFS integrated, ${final.input_tp} dBTP true peak (target ${I} LUFS, ≤ ${TP} dBTP)`);
+  }
+}

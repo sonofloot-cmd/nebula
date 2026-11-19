@@ -132,14 +132,16 @@ const DebrisFootprint: React.FC<SceneComponentProps> = ({ durationInFrames, prop
       const p = Math.min(1, frame / Math.max(1, durationInFrames - 1));
       const e = 1 - Math.pow(1 - smoothstep(0.05, 0.85, p), 2.2);
       const look = startW.clone().lerp(midW, e).normalize().multiplyScalar(R);
-      const dist = 8 + 17 * e;
+      // pull back far enough to frame the whole strip (25 units for 6,000 km, ~12 for 2,000 km)
+      const endDist = 6 + 19 * Math.min(1, lengthKm / 6000);
+      const dist = Math.min(8, endDist * 0.65) + (endDist - Math.min(8, endDist * 0.65)) * e;
       const pos = look.clone().normalize().multiplyScalar(R + dist);
       pos.y -= 1.0 * e;
       const target = look.clone();
       target.y -= 0.3 * e;
       return { pos: [pos.x, pos.y, pos.z] as [number, number, number], target: [target.x, target.y, target.z] as [number, number, number], fov: 42 };
     },
-    [durationInFrames, startW, midW],
+    [durationInFrames, startW, midW, lengthKm],
   );
 
   const ny = at(leadKm / (lengthKm + leadKm)).multiplyScalar(R * 1.01);
@@ -165,7 +167,7 @@ const DebrisFootprint: React.FC<SceneComponentProps> = ({ durationInFrames, prop
           <Particles count={1200} t={t} compute={edges} size={0.06} color="#ffd08a" seed={71} softness={0.4} additive maxPixelSize={6} />
           <Particles count={2500} t={t} compute={rain} size={0.05} color="#ffe2b0" seed={72} softness={0.5} additive maxPixelSize={6} />
           <Glow position={[ny.x, ny.y, ny.z]} size={0.9} color="#ff7a2a" opacity={0.9} />
-          <TextLabel card={{ lines: ["NEW YORK"], width: 512, height: 128, fg: "#ffffff", size: 88, weight: 900, glow: "#000000" }} height={0.42} position={[ny.x * 1.03, ny.y * 1.03 - 0.3, ny.z * 1.03]} />
+          <TextLabel card={{ lines: ["NEW YORK"], width: 512, height: 128, fg: "#ffffff", size: 88, weight: 900, glow: "#000000" }} height={0.3 + 0.12 * Math.min(1, lengthKm / 6000)} position={[ny.x * 1.03, ny.y * 1.03 - 0.3, ny.z * 1.03]} />
           {labels.map((l, i) => {
             const p = at((l.km + leadKm) / (lengthKm + leadKm)).multiplyScalar(R * 1.04);
             const lf = (l.km + leadKm) / (lengthKm + leadKm);
@@ -174,7 +176,7 @@ const DebrisFootprint: React.FC<SceneComponentProps> = ({ durationInFrames, prop
               <TextLabel
                 key={i}
                 card={{ lines: [l.text], width: 640, height: 128, fg: "#ffd08a", size: 84, weight: 900, glow: "#000000" }}
-                height={0.75}
+                height={0.3 + 0.45 * Math.min(1, lengthKm / 6000)}
                 opacity={on}
                 position={[p.x, p.y, p.z]}
               />

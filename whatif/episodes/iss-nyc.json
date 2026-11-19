@@ -1,7 +1,7 @@
 // Episode 2 — "What if the International Space Station fell on New York?"
 // Format: JSON with comments (// and /* */ are stripped by scripts/episode.mjs).
 // Every number on screen has its source (or "est.") in a comment next to it.
-// Fact-checked November 2026. Runtime ≈ 42 s.
+// Fact-checked November 2026 (footprint and surviving mass re-verified). Runtime ≈ 44 s.
 //
 // Background: NASA plans a controlled deorbit of the ISS around late 2030, using a SpaceX-built
 // U.S. Deorbit Vehicle, into the remote South Pacific (the area around Point Nemo).
@@ -93,16 +93,15 @@
       // OVER NEW YORK — the fireball over a generic low-poly Manhattan skyline. Sonic boom + shake.
       "component": "iss/NycFireball",
       "durationInSeconds": 5.5,
-      // ~80 tonnes: est. 420 t × ~20 % surviving.
-      //   Precedents: Skylab — "some 500 major debris pieces, with a total weight of about 20,000 kg"
-      //   were found in the Outback, out of a ~77 t station (≈ 26 %).
+      // ~67 tonnes: est. NASA estimates "16 percent of the ISS would likely survive the thermal stresses
+      //   of reentry" — NASA OIG, IG-18-021 (2018), repeated in IG-22-005 (2021).
+      //   https://oig.nasa.gov/wp-content/uploads/2024/02/IG-18-021.pdf
+      //   420 t (NASA mass, scene 2) × 16 % = 67 t. Shown as an estimate.
+      //   For scale: Skylab — ~20,000 kg of debris found out of ~77 t (≈ 26 %),
       //   https://ntrs.nasa.gov/api/citations/19940020171/downloads/19940020171.pdf
-      //   Mir — 20–25 t of fragments were predicted to survive out of ~130 t (≈ 17 %).
-      //   https://en.wikipedia.org/wiki/Deorbit_of_Mir
-      //   General rule of thumb (secondary): 10–40 % of a large spacecraft's mass reaches the ground.
       // Sonic boom: dramatised. Large re-entries are heard as booms on the ground (e.g. Columbia, 2003).
-      "stat": { "label": "Debris", "value": 80, "suffix": " tonnes", "sublabel": "est. ~20% survives (like Skylab)" },
-      "caption": "80 tonnes survive. The sonic boom shakes Manhattan.",
+      "stat": { "label": "Debris", "value": 67, "suffix": " tonnes", "sublabel": "NASA est.: ~16% survives reentry" },
+      "caption": "67 tonnes survive. The sonic boom shakes Manhattan.",
       "props": { "boomAt": 1.5, "splitAt": 0.8 },
       "sfx": [
         { "synth": "wind", "at": 0, "volume": 0.25, "params": { "duration": 5.5 } },
@@ -113,23 +112,48 @@
       ]
     },
     {
+      // IMPACT — a surviving chunk slams into the Hudson. Street-level flash + camera shake. (2 s beat)
+      "component": "iss/HudsonImpact",
+      "durationInSeconds": 2,
+      // 300 km/h: impact speed of heavy surviving debris. The Aerospace Corporation (CORDS) estimates
+      //   impact velocities "from about 30 km/hr for lightweight debris to 300 km/hr or more for heavier
+      //   objects" — surviving pieces have slowed to terminal velocity long before they reach the ground.
+      //   https://aerospace.org/article/satellite-reentry-manipulating-plunge
+      // "Car-sized chunks": NASA ISS program manager Dana Weigel (July 2024 deorbit-vehicle briefing):
+      //   surviving pieces range "from microwave-oven size to sedan size" (SpaceNews, 2024-07-17).
+      //   https://spacenews.com/enhanced-dragon-spacecraft-to-deorbit-the-iss-at-the-end-of-its-life/
+      "stat": { "label": "Impact speed", "value": 300, "suffix": " km/h", "sublabel": "Heavy debris: 300+ km/h" },
+      "caption": "Car-sized chunks slam into the Hudson.",
+      "props": { "hitAt": 0.4 },
+      "sfx": [
+        { "synth": "whistle", "at": 0.4, "volume": 0.4, "params": { "duration": 0.8, "pitch": 0.8, "thud": false } },
+        { "synth": "splash", "at": 0.4, "volume": 0.9 },
+        { "synth": "boom", "at": 0.4, "volume": 0.35, "params": { "size": 0.7 } }
+      ]
+    },
+    {
       // IMPACT ZONE — the debris footprint: a long, narrow strip from Manhattan out over the Atlantic.
       "component": "iss/DebrisFootprint",
       "durationInSeconds": 4.5,
-      // 6,000 km: NASA's target for the ISS deorbit is "a 6,000 km or less footprint in an uninhabited
-      //   region of the South Pacific Ocean" (NASA JSC procurement, U.S. Deorbit Vehicle).
-      //   https://www.nasa.gov/wp-content/uploads/2025/06/usdv-vignette-op.pdf
-      //   For comparison: Mir was predicted at ~6,000 km × 200 km and actually spread ~±1,500 km
-      //   along track; Skylab's footprint was ~3,900 km. So: thousands of km, not hundreds.
+      // 2,000 km: NASA's current plan. At the July 2024 briefing on the U.S. Deorbit Vehicle, ISS program
+      //   manager Dana Weigel asked for "a very, very tight debris footprint": no more than about 2,000 km
+      //   (1,250 miles) long. Reported by Space.com, SpaceNews and SpacePolicyOnline; Spaceflight Now /
+      //   CBS give "a narrow 1,200-mile-long footprint" (~1,900 km).
+      //   https://www.space.com/spacex-dragon-iss-deorbit-vehicle-design-revealed
+      //   https://spacenews.com/enhanced-dragon-spacecraft-to-deorbit-the-iss-at-the-end-of-its-life/
+      //   https://spacepolicyonline.com/news/nasa-iss-deorbit-vehicle-will-cost-1-5-billion-but-its-essential/
+      //   (Re-verified Nov 2026. The older "6,000 km or less" figure is the earlier requirement ceiling
+      //   in NASA OIG IG-18-021 and the USDV procurement; NASA's 2024 plan is tighter, so we use 2,000 km.)
       // Direction: the ISS orbit is inclined 51.6°, so over New York (40.7°N) an ascending pass heads
-      //   ~55° east of north: asin(cos 51.6° / cos 40.7°) = 55.0°. 6,000 km along that great circle
-      //   passes south of Ireland and ends in central France (47.3°N 3.8°E) — hence "to France".
-      //   Strip width drawn as 200 km (Mir's predicted width).
-      "stat": { "label": "Debris trail", "value": 6000, "suffix": " km", "sublabel": "NASA's max for the ISS footprint" },
-      "caption": "Debris could rain from Manhattan to France.",
+      //   ~55° east of north: asin(cos 51.6° / cos 40.7°) = 55.0°. 2,000 km along that great circle
+      //   crosses the Gulf of Maine, Nova Scotia (~1,000 km), Cape Breton (~1,200 km) and southern
+      //   Newfoundland (~1,600–1,800 km), ending just off its NE coast (49.0°N 51.3°W) — hence "to Newfoundland".
+      //   Strip width drawn as 200 km (Mir's predicted lateral spread).
+      "stat": { "label": "Debris trail", "value": 2000, "suffix": " km", "sublabel": "NASA's planned ISS corridor" },
+      "caption": "Debris could rain from Manhattan to Newfoundland.",
       "props": {
-        "start": [40.71, -74.01], "bearing": 55, "lengthKm": 6000, "widthKm": 200,
-        "labels": [ { "text": "ATLANTIC", "km": 2600 }, { "text": "FRANCE", "km": 5950 } ]
+        "start": [40.71, -74.01], "bearing": 55, "lengthKm": 2000, "widthKm": 200,
+        "labels": [ { "text": "NOVA SCOTIA", "km": 1000 }, { "text": "NEWFOUNDLAND", "km": 1750 } ]
       },
       "sfx": [
         { "synth": "wind", "at": 0, "volume": 0.3, "params": { "duration": 4.5, "airy": true } },
@@ -206,5 +230,7 @@
 
   // Optional: drop your own track at assets/music.mp3; otherwise the score below is generated.
   "music": { "file": "music.mp3", "volume": 0.12 },
-  "score": { "key": "A minor", "volume": 0.42 }
+  "score": { "key": "A minor", "volume": 0.42 },
+  // Final mix is loudness-normalised after rendering (two-pass ffmpeg loudnorm).
+  "loudness": { "lufs": -14, "truePeak": -1 }
 }

@@ -333,6 +333,35 @@ export const whistle = ({ duration = 1.6, pitch = 1, thud = true, pan = 0, seed 
   return { buf: addReverb(st, 0.35, { size: 0.85, damp: 0.4, tail: 1.6 }), hit: duration };
 };
 
+/** Big water impact: deep thump, a broadband "crash" of water, then a long hiss of falling spray. */
+export const splash = ({ size = 1, seed = 141 } = {}) => {
+  const r = mulberry32(seed);
+  const dur = 3.2 * size;
+  const out = stereo(dur);
+  const thud = osc(1.0, (t) => 34 + 80 * Math.exp(-t * 16), "sine");
+  shape(thud, adEnv(0.002, 0.22 * size));
+  mix(out, thud, 0, 1.2);
+  [0, 1].forEach((ch) => {
+    const crash = noise(1.6, seed + ch);
+    filter(crash, "lowpass", (t) => 900 + 5000 * Math.exp(-t * 3), 0.8);
+    filter(crash, "highpass", 120, 0.7);
+    shape(crash, adEnv(0.004, 0.35 * size));
+    mix(out[ch], crash, 0, 1.3);
+    const spray = noise(dur, seed + 10 + ch);
+    filter(spray, "bandpass", (t) => 2600 + 900 * Math.sin(t * 3 + ch), 0.7);
+    shape(spray, (t) => Math.min(1, t / 0.25) * Math.exp(-Math.max(0, t - 0.4) * 1.1) * 0.5);
+    mix(out[ch], spray, 0.08, 1);
+  });
+  // droplets pattering back onto the water
+  for (let t = 0.6; t < dur - 0.2; t += 0.01 + r() * 0.04) {
+    const d = noise(0.03, seed + Math.floor(t * 1000));
+    filter(d, "bandpass", 1800 + r() * 3500, 3);
+    shape(d, adEnv(0.001, 0.006));
+    mix(out, d, t, 0.25 * Math.exp(-(t - 0.6) * 0.9), r() * 1.8 - 0.9);
+  }
+  return { buf: addReverb(out, 0.35, { size: 0.9, damp: 0.4, tail: 2 * size }), hit: 0 };
+};
+
 /** Short metallic groan / creak (the station starting to tilt). */
 export const creak = ({ duration = 1.2, pitch = 1, seed = 131 } = {}) => {
   const out = mono(duration + 0.2);
@@ -345,4 +374,4 @@ export const creak = ({ duration = 1.2, pitch = 1, seed = 131 } = {}) => {
   return { buf: addReverb(toStereo(out), 0.5, { size: 0.9, damp: 0.3, tail: 1.8 }), hit: 0 };
 };
 
-export const RECIPES = { sneeze, crowdSneeze, babble, street, train, boom, whoosh, wind, thump, horn, alarm, rumble, sonicBoom, whistle, creak };
+export const RECIPES = { sneeze, crowdSneeze, babble, street, train, boom, whoosh, wind, thump, horn, alarm, rumble, sonicBoom, whistle, creak, splash };

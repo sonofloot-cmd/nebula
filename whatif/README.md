@@ -144,6 +144,7 @@ export default LavaCloseUp;
 | `three/earth` | `NightEarth`: dark globe with warm city-light specks (`DARK_EARTH` palette). |
 | `three/iss` | Generic low-poly space station in metres (109 m), with `glow` (re-entry heat), `breakT` (wings tear off, then truss and modules split), `silhouette` (for shadows). |
 | `three/text` | `TextPanel` / `TextLabel`: canvas-drawn text for billboards, signs and map labels (waits for the Inter font). |
+| `three/city` | `TowerMesh` + `makeSkylineRow`: night towers with randomly lit windows. |
 | `three/glow` | `Glow` (additive light blob for fireballs, lamps, bloom) and `SkyDome` (vertical-gradient backdrop). |
 | `SceneCanvas` `cameraAt` | Per-frame camera override, e.g. a hard cut inside one scene (see `iss/OutbackTwist`). |
 
@@ -179,9 +180,14 @@ Every render builds a soundtrack automatically. All of it is synthesised in code
   `train`, `boom` (size), `whoosh` (duration, reverse), `wind` (duration, airy), `thump`,
   `horn` (duration, pitch), `alarm` (repeats), `rumble` (duration, build: a deep roar that builds),
   `sonicBoom` (size, gap: double crack + rattling tail), `whistle` (duration, pitch, pan, thud:
-  falling debris; the hit is the thud), `creak` (duration, pitch). `sneeze` also takes `big: true` for the opening frame.
+  falling debris; the hit is the thud), `creak` (duration, pitch), `splash` (size: big water impact). `sneeze` also takes `big: true` for the opening frame.
   Add `"align": "start"` to a cue to start the sound at `at` instead of lining up its hit.
   Adding a recipe is one function in `scripts/audio/sfx.mjs`.
+
+- **Loudness.** Add `"loudness": { "lufs": -14, "truePeak": -1 }` to an episode and the finished MP4
+  is normalised with a two-pass ffmpeg `loudnorm` (video stream-copied, audio re-encoded AAC 256k),
+  then re-measured; if AAC overshoots the true-peak ceiling or the level misses by > 0.2 LU it is
+  redone with a corrected target. Needs `ffmpeg` on the PATH (or `FFMPEG=/path/to/ffmpeg`).
 
 Generated audio is cached in `assets/generated/<id>/`, and only changed cues are re-synthesised.
 `npm run audio -- episodes/<id>.json` builds the audio alone if you want to listen to the files.
@@ -214,8 +220,9 @@ estimates are marked **est.** In short:
 - LA → New York ≈ 8 min: derived, 3,936 km great-circle ÷ 28,000 km/h = 8.4 min
 - Re-entry heat 1,500–1,650 °C: ESA Mir FAQ (>1,500 °C); 1,650 °C upper figure is secondary
 - Dense tanks survive: Aerospace Corp. recovered-debris analysis (2005); ESA CleanSat
-- ~80 t surviving debris: **est.**, 420 t × ~20 % (Skylab ≈ 26 % recovered, Mir ≈ 17 % predicted)
-- Footprint up to 6,000 km: NASA US Deorbit Vehicle procurement ("6,000 km or less footprint"); along the ISS ground track (55° from New York) that reaches central France
+- ~67 t surviving debris: **est.**, NASA estimates ~16 % of the ISS survives re-entry (NASA OIG IG-18-021) × 420 t
+- Impact speed 300 km/h: Aerospace Corp. — "30 km/hr for lightweight debris to 300 km/hr or more for heavier objects"; surviving pieces up to sedan size (NASA's Dana Weigel, July 2024)
+- Footprint ~2,000 km: NASA's July 2024 deorbit-vehicle briefing (ISS program manager Dana Weigel: a "very, very tight" footprint, ≤ ~2,000 km / 1,250 mi). The older "6,000 km or less" ceiling (OIG 2018, USDV procurement) was superseded. Along the ISS ground track (55° from New York) 2,000 km crosses Nova Scotia and reaches Newfoundland
 - Point Nemo 2,688 km from land: NOAA; ISS ~400 km up (NASA), so the crew are *often* the nearest people
 - Skylab, 1979, Esperance / Balladonia WA; $400 littering fine never paid by NASA, paid in 2009 by US radio host Scott Barley: NASA history office, Shire of Esperance, ABC
 
